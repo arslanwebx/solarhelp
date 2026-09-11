@@ -46,5 +46,57 @@ export const INSTALLERS = [
   }
 ];
 
-// Lender coverage will be added here when lender data is provided.
-export const LENDERS = [];
+// Lender coverage supplied for OWE. Keeping installer association explicit prevents
+// these lender options from being presented as approved for other installers.
+export const LENDERS = [
+  {
+    name: 'LightReach',
+    installers: ['OWE'],
+    states: ['AZ', 'CA', 'CO', 'CT', 'FL', 'IL', 'MA', 'MD', 'ME', 'NH', 'NJ', 'NM', 'PR', 'RI', 'TX', 'VA', 'VT']
+  },
+  {
+    name: 'Credit Human',
+    installers: ['OWE'],
+    states: ['AZ', 'CA', 'CO', 'CT', 'FL', 'IL', 'MA', 'MD', 'ME', 'NH', 'NM', 'RI', 'TX', 'VA']
+  },
+  {
+    name: 'Participate',
+    installers: ['OWE'],
+    states: ['AZ', 'CA', 'CO', 'FL', 'MA', 'TX']
+  },
+  {
+    name: 'EnFin',
+    installers: ['OWE'],
+    states: ['AZ', 'CA', 'CT', 'FL', 'IL', 'MA', 'NJ', 'PA', 'TX']
+  },
+  {
+    name: 'Concert Propel',
+    installers: ['OWE'],
+    states: ['AZ', 'CA', 'CO', 'TX']
+  },
+  {
+    name: 'Sungage',
+    installers: ['OWE'],
+    states: ['AZ', 'CA', 'CO', 'CT', 'IL', 'ME', 'NH', 'NM', 'TX']
+  },
+  {
+    name: 'OneEthos',
+    installers: ['OWE'],
+    states: ['AZ', 'CO', 'NM', 'TX']
+  },
+  {
+    name: 'SunRun',
+    installers: ['OWE'],
+    states: ['CA', 'CT', 'IL', 'MA', 'MD', 'ME', 'NH', 'TX']
+  },
+  {
+    name: 'Propel',
+    installers: ['OWE'],
+    states: ['ME']
+  },
+  {
+    name: 'Solrite',
+    installers: ['OWE'],
+    states: ['TX']
+  }
+];
