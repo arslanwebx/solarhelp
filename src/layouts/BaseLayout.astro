@@ -30,7 +30,12 @@ const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
           </span>
           <span>SolarHelp</span>
         </a>
-        <nav class="site-nav" aria-label="Main navigation">
+
+        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Open navigation menu">
+          <span class="menu-toggle-lines" aria-hidden="true"><i></i><i></i><i></i></span>
+        </button>
+
+        <nav id="site-nav" class="site-nav" aria-label="Main navigation">
           <a class:list={['nav-link', path === '/redlines' && 'active']} href="/redlines">
             <span class="nav-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -64,5 +69,43 @@ const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
       </div>
     </header>
     <slot />
+
+    <script is:inline>
+      (() => {
+        const toggle = document.querySelector('.menu-toggle');
+        const nav = document.getElementById('site-nav');
+        if (!toggle || !nav) return;
+
+        const closeMenu = () => {
+          toggle.setAttribute('aria-expanded', 'false');
+          toggle.setAttribute('aria-label', 'Open navigation menu');
+          nav.classList.remove('is-open');
+        };
+
+        const openMenu = () => {
+          toggle.setAttribute('aria-expanded', 'true');
+          toggle.setAttribute('aria-label', 'Close navigation menu');
+          nav.classList.add('is-open');
+        };
+
+        toggle.addEventListener('click', (event) => {
+          event.stopPropagation();
+          toggle.getAttribute('aria-expanded') === 'true' ? closeMenu() : openMenu();
+        });
+
+        nav.addEventListener('click', (event) => event.stopPropagation());
+        nav.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeMenu));
+        document.addEventListener('click', closeMenu);
+        document.addEventListener('keydown', (event) => {
+          if (event.key === 'Escape') {
+            closeMenu();
+            toggle.focus();
+          }
+        });
+        window.addEventListener('resize', () => {
+          if (window.innerWidth > 820) closeMenu();
+        });
+      })();
+    </script>
   </body>
 </html>
