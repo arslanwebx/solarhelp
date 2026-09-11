@@ -73,6 +73,24 @@ const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
 
     <script is:inline>
       (() => {
+        const calculatorForms = [
+          document.getElementById('proposal-form'),
+          document.getElementById('quick-form')
+        ].filter(Boolean);
+
+        calculatorForms.forEach((form) => {
+          form.querySelectorAll('input[placeholder]').forEach((input) => input.removeAttribute('placeholder'));
+        });
+
+        const lender = document.getElementById('lenderProgram');
+        if (lender && lender.options?.length && lender.options[0].value === '') {
+          lender.options[0].textContent = '';
+        }
+      })();
+    </script>
+
+    <script is:inline>
+      (() => {
         const toggle = document.querySelector('.menu-toggle');
         const nav = document.getElementById('site-nav');
         if (!toggle || !nav) return;
