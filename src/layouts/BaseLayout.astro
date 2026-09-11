@@ -38,6 +38,15 @@ const resolvedTitle = path === '/' ? 'Solar Help - Calculator & Resources' : tit
         </button>
 
         <nav id="site-nav" class="site-nav" aria-label="Main navigation">
+          <a class:list={['nav-link', path === '/installers' && 'active']} href="/installers">
+            <span class="nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 18h16M6 18V9l6-4 6 4v9"></path>
+                <path d="M9 18v-5h6v5M9 9h6"></path>
+              </svg>
+            </span>
+            <span>Installers</span>
+          </a>
           <a class:list={['nav-link', path === '/redlines' && 'active']} href="/redlines">
             <span class="nav-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
