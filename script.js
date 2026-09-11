@@ -66,13 +66,14 @@
     if (!data) return;
 
     const stateSelect = $('state-select');
-    const searchInput = $('installer-search');
+    const installerSelect = $('installer-select');
     const tableBody = $('redline-table-body');
     const status = $('redline-status');
+    const installerCoverage = window.SOLARHELP_INSTALLER_COVERAGE || [];
 
-    if (!stateSelect || !tableBody || !status) return;
+    if (!stateSelect || !installerSelect || !tableBody || !status) return;
 
-    stateSelect.innerHTML = '';
+    stateSelect.innerHTML = '<option value="">Select a state...</option>';
     data.US_STATES.forEach((state) => {
       const option = document.createElement('option');
       option.value = state.code;
@@ -80,33 +81,44 @@
       stateSelect.appendChild(option);
     });
 
-    stateSelect.value = 'FL';
+    installerSelect.innerHTML = '<option value="">Select an installer...</option>';
+    installerCoverage.forEach((installer) => {
+      const option = document.createElement('option');
+      option.value = installer.name;
+      option.textContent = installer.name;
+      installerSelect.appendChild(option);
+    });
 
-    function render() {
-      const stateCode = stateSelect.value;
-      const stateName = data.STATE_NAME_BY_CODE[stateCode] || stateCode;
-      const query = (searchInput?.value || '').trim().toLowerCase();
-      const allRows = data.getInstallersForState(stateCode);
-      const rows = allRows.filter((row) => !query || row.installer.toLowerCase().includes(query));
-      const numericRates = allRows.filter((row) => typeof row.redline === 'number').map((row) => row.redline);
-      const lowest = numericRates.length ? Math.min(...numericRates) : null;
+    stateSelect.value = '';
+    installerSelect.value = '';
 
-      status.textContent = `${stateName}: ${allRows.length} applicable installer${allRows.length === 1 ? '' : 's'}${query ? `, ${rows.length} shown after filter` : ''}.`;
+    function stateLabel(code) {
+      const name = data.STATE_NAME_BY_CODE[code] || code;
+      return `${name} (${code})`;
+    }
+
+    function renderRows(rows, options = {}) {
+      const lowest = options.highlightLowest
+        ? Math.min(...rows.filter((row) => typeof row.redline === 'number').map((row) => row.redline))
+        : null;
 
       tableBody.innerHTML = '';
 
       if (!rows.length) {
-        tableBody.innerHTML = `<tr><td class="empty-row" colspan="3">No installers match this filter.</td></tr>`;
+        tableBody.innerHTML = `<tr><td class="empty-row" colspan="4">${escapeHtml(options.emptyMessage || 'No matching redline records found.')}</td></tr>`;
         return;
       }
 
       rows.forEach((row) => {
         const tr = document.createElement('tr');
-        const isLowest = typeof row.redline === 'number' && row.redline === lowest;
+        const isLowest = options.highlightLowest && typeof row.redline === 'number' && row.redline === lowest;
         const redlineText = row.redline === null ? 'N/A' : `$${formatPpw(row.redline)} / W`;
         const note = row.notes ? `<span class="row-note">${escapeHtml(row.notes)}</span>` : '';
-        const scopeText = row.sourceScope || row.coverageType || '';
+        const scopeText = row.sourceScope || row.coverageType || 'Confirmed state coverage';
+        const code = row.stateCode || options.stateCode || '';
+
         tr.innerHTML = `
+          <td><strong>${escapeHtml(stateLabel(code))}</strong></td>
           <td><strong>${escapeHtml(row.installer)}</strong></td>
           <td><span class="rate ${isLowest ? 'lowest' : ''} ${row.redline === null ? 'na' : ''}">${redlineText}</span></td>
           <td>
@@ -118,9 +130,61 @@
       });
     }
 
-    stateSelect.addEventListener('change', render);
-    searchInput?.addEventListener('input', render);
-    render();
+    function showEmptyState() {
+      status.textContent = 'Select a state or installer to view redlines.';
+      tableBody.innerHTML = '<tr><td class="empty-row" colspan="4">Choose a state or installer above.</td></tr>';
+    }
+
+    function renderState(stateCode) {
+      if (!stateCode) {
+        showEmptyState();
+        return;
+      }
+
+      const rows = data.getInstallersForState(stateCode);
+      const label = stateLabel(stateCode);
+      status.textContent = `${label}: ${rows.length} confirmed installer${rows.length === 1 ? '' : 's'}.`;
+      renderRows(rows, {
+        stateCode,
+        highlightLowest: true,
+        emptyMessage: `No confirmed installers are listed for ${label}.`
+      });
+    }
+
+    function renderInstaller(installerName) {
+      if (!installerName) {
+        showEmptyState();
+        return;
+      }
+
+      const rows = typeof window.getCoverageForInstaller === 'function'
+        ? window.getCoverageForInstaller(installerName)
+        : [];
+
+      rows.sort((a, b) => {
+        const aName = data.STATE_NAME_BY_CODE[a.stateCode] || a.stateCode;
+        const bName = data.STATE_NAME_BY_CODE[b.stateCode] || b.stateCode;
+        return aName.localeCompare(bName);
+      });
+
+      status.textContent = `${installerName}: ${rows.length} confirmed state${rows.length === 1 ? '' : 's'}.`;
+      renderRows(rows, {
+        highlightLowest: false,
+        emptyMessage: `No confirmed states are listed for ${installerName}.`
+      });
+    }
+
+    stateSelect.addEventListener('change', () => {
+      if (stateSelect.value) installerSelect.value = '';
+      renderState(stateSelect.value);
+    });
+
+    installerSelect.addEventListener('change', () => {
+      if (installerSelect.value) stateSelect.value = '';
+      renderInstaller(installerSelect.value);
+    });
+
+    showEmptyState();
   }
 
   function initWarehouses() {
