@@ -9,6 +9,7 @@ interface Props {
 
 const { title, description } = Astro.props;
 const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
+const resolvedTitle = path === '/' ? 'Solar Help - Calculator & Resources' : title;
 ---
 <!doctype html>
 <html lang="en">
@@ -17,7 +18,7 @@ const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     <meta name="theme-color" content="#ffffff" />
-    <title>{title}</title>
+    <title>{resolvedTitle}</title>
   </head>
   <body>
     <header class="site-header">
