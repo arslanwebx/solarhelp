@@ -1,778 +1,377 @@
-// ==========================================================================
-// SolarHelp — Master Application Logic
-// Handles: Redlines State Directory, Warehouses, Navigation Routing, PPW Calculators
-// ==========================================================================
+(function () {
+  'use strict';
 
-const $ = (id) => document.getElementById(id);
+  const $ = (id) => document.getElementById(id);
+  const page = document.body.dataset.page || 'home';
+  const data = window.SOLARHELP_DATA || null;
 
-// --------------------------------------------------------------------------
-// Navigation & View Routing
-// --------------------------------------------------------------------------
-const views = {
-  redlines: $('view-redlines'),
-  warehouses: $('view-warehouses'),
-  tools: $('view-tools')
-};
-
-const navLinks = {
-  redlines: $('nav-redlines'),
-  warehouses: $('nav-warehouses-btn'),
-  tools: $('nav-tools-btn')
-};
-
-let currentView = 'redlines';
-
-function switchView(viewName, options = {}) {
-  if (!views[viewName]) viewName = 'redlines';
-  currentView = viewName;
-
-  // Toggle view containers
-  Object.keys(views).forEach(key => {
-    if (key === viewName) {
-      views[key].classList.remove('hidden');
-    } else {
-      views[key].classList.add('hidden');
-    }
-  });
-
-  // Update main nav active indicators
-  document.querySelectorAll('.main-nav .nav-link').forEach(link => link.classList.remove('active'));
-  if (navLinks[viewName]) {
-    navLinks[viewName].classList.add('active');
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[char]));
   }
 
-  // Handle warehouse sub-tabs
-  if (viewName === 'warehouses' && options.tab) {
-    selectWarehouseTab(options.tab);
+  function numberFromInput(input) {
+    if (!input || input.value.trim() === '') return null;
+    return Number(input.value);
   }
 
-  // Handle auto-scroll to element if requested
-  if (options.scrollId) {
-    const targetEl = $(options.scrollId);
-    if (targetEl) {
-      setTimeout(() => {
-        targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 50);
-    }
-  } else {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  function isValidNumber(value) {
+    return Number.isFinite(value) && value >= 0;
   }
 
-  // Close mobile drawer if open
-  const mobileDrawer = $('mobile-drawer');
-  const mobileToggle = $('mobile-toggle-btn');
-  if (mobileDrawer && !mobileDrawer.hidden) {
-    mobileDrawer.hidden = true;
-    mobileToggle.setAttribute('aria-expanded', 'false');
-  }
-}
-
-// Handle Hash Routing
-function handleHashRoute() {
-  const hash = window.location.hash.replace('#', '') || 'redlines';
-
-  if (hash === 'redlines') {
-    switchView('redlines');
-  } else if (hash === 'warehouses') {
-    switchView('warehouses');
-  } else if (hash === 'warehouses-owe') {
-    switchView('warehouses', { tab: 'owe' });
-  } else if (hash === 'warehouses-sunvena') {
-    switchView('warehouses', { tab: 'sunvena' });
-  } else if (hash === 'tools') {
-    switchView('tools', { scrollId: 'calculator-form' });
-  } else if (hash === 'tools-quick') {
-    switchView('tools', { scrollId: 'quick-ppw-heading' });
-  } else {
-    switchView('redlines');
-  }
-}
-
-window.addEventListener('hashchange', handleHashRoute);
-
-// Mobile Drawer Toggle
-const mobileToggleBtn = $('mobile-toggle-btn');
-const mobileDrawer = $('mobile-drawer');
-
-if (mobileToggleBtn && mobileDrawer) {
-  mobileToggleBtn.addEventListener('click', () => {
-    const isExpanded = mobileToggleBtn.getAttribute('aria-expanded') === 'true';
-    mobileToggleBtn.setAttribute('aria-expanded', !isExpanded);
-    mobileDrawer.hidden = isExpanded;
-  });
-}
-
-// Close mobile drawer when any link clicked
-document.querySelectorAll('.mobile-nav-links a').forEach(link => {
-  link.addEventListener('click', () => {
-    if (mobileDrawer) mobileDrawer.hidden = true;
-    if (mobileToggleBtn) mobileToggleBtn.setAttribute('aria-expanded', 'false');
-  });
-});
-
-
-// --------------------------------------------------------------------------
-// Warehouse Tabs (OWE & Sunvena)
-// --------------------------------------------------------------------------
-function selectWarehouseTab(tabName) {
-  const oweBtn = $('tab-btn-owe');
-  const sunvenaBtn = $('tab-btn-sunvena');
-  const owePanel = $('w-panel-owe');
-  const sunvenaPanel = $('w-panel-sunvena');
-
-  if (tabName === 'sunvena') {
-    sunvenaBtn.classList.add('active');
-    oweBtn.classList.remove('active');
-    sunvenaPanel.classList.remove('hidden');
-    owePanel.classList.add('hidden');
-  } else {
-    oweBtn.classList.add('active');
-    sunvenaBtn.classList.remove('active');
-    owePanel.classList.remove('hidden');
-    sunvenaPanel.classList.add('hidden');
-  }
-}
-
-if ($('tab-btn-owe')) {
-  $('tab-btn-owe').addEventListener('click', () => selectWarehouseTab('owe'));
-}
-if ($('tab-btn-sunvena')) {
-  $('tab-btn-sunvena').addEventListener('click', () => selectWarehouseTab('sunvena'));
-}
-
-// "View Redlines" buttons in warehouse panels
-document.querySelectorAll('.view-rates-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const installer = btn.getAttribute('data-filter-installer');
-    switchView('redlines');
-    window.location.hash = 'redlines';
-    if (installer && $('installer-search')) {
-      $('installer-search').value = installer;
-      renderRedlines();
-    }
-  });
-});
-
-// --------------------------------------------------------------------------
-// OWE Branch Locations Table Controller
-// --------------------------------------------------------------------------
-const branchStateSelect = $('branch-state-select');
-const branchCountBadge = $('branch-count-badge');
-const branchTableBody = $('branch-table-body');
-
-let currentBranchState = 'ALL';
-
-function initBranchLocationsTable() {
-  if (!branchStateSelect || !window.OWE_BRANCH_LOCATIONS) return;
-
-  // Extract unique states from OWE_BRANCH_LOCATIONS
-  const statesSet = new Set();
-  window.OWE_BRANCH_LOCATIONS.forEach(b => {
-    if (b.state) statesSet.add(b.state);
-  });
-  const sortedStates = Array.from(statesSet).sort();
-
-  branchStateSelect.innerHTML = '<option value="ALL">All States</option>';
-  sortedStates.forEach(st => {
-    const opt = document.createElement('option');
-    opt.value = st;
-    opt.textContent = st;
-    branchStateSelect.appendChild(opt);
-  });
-
-  branchStateSelect.addEventListener('change', (e) => {
-    currentBranchState = e.target.value;
-    renderBranchLocations(currentBranchState);
-  });
-
-  renderBranchLocations(currentBranchState);
-}
-
-function renderBranchLocations(selectedState = 'ALL') {
-  if (!branchTableBody || !window.OWE_BRANCH_LOCATIONS) return;
-
-  const branches = window.getBranchesForState ? window.getBranchesForState(selectedState) : window.OWE_BRANCH_LOCATIONS;
-
-  // Update Branch Count Badge (e.g., "Texas - 5 warehouses", "All States - 39 warehouses")
-  if (branchCountBadge) {
-    const count = branches.length;
-    const label = selectedState === 'ALL' ? 'All States' : selectedState;
-    branchCountBadge.textContent = `${label} - ${count} warehouse${count === 1 ? '' : 's'}`;
+  function currency(value) {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 2
+    }).format(value);
   }
 
-  branchTableBody.innerHTML = '';
-
-  if (branches.length === 0) {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td colspan="9" class="empty-table-msg" style="text-align:center; padding:30px; color:#64748b;">No warehouse branches found for ${escapeHtml(selectedState)}.</td>`;
-    branchTableBody.appendChild(tr);
-    return;
+  function formatPpw(value) {
+    return Number(value).toFixed(2);
   }
 
-  branches.forEach(branch => {
-    const tr = document.createElement('tr');
-    // Stable unique ID as key attribute & DOM id
-    tr.id = branch.id;
-    tr.setAttribute('key', branch.id);
-    tr.setAttribute('data-id', branch.id);
+  function initLegacyHashRedirects() {
+    const hash = window.location.hash;
+    if (page !== 'home' || !hash) return;
+    if (hash === '#redlines') window.location.replace('/redlines');
+    if (hash === '#warehouses-owe' || hash === '#warehouses') window.location.replace('/warehouses-owe');
+  }
 
-    // Verified Google Maps URL using verified mapQuery
-    const fullAddress = branch.mapQuery || branch.completeAddress;
-    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
+  function initRedlines() {
+    if (!data) return;
 
-    tr.innerHTML = `
-      <td class="branch-name-cell">${escapeHtml(branch.branch)}</td>
-      <td>
-        <a href="${googleMapsUrl}" target="_blank" rel="noopener noreferrer" class="branch-address-link" title="Open ${escapeHtml(fullAddress)} in Google Maps">
-          <svg class="branch-map-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-            <circle cx="12" cy="10" r="3"></circle>
-          </svg>
-          <span>${escapeHtml(branch.completeAddress)}</span>
-        </a>
-      </td>
-      <td>${escapeHtml(branch.city)}</td>
-      <td><strong>${escapeHtml(branch.state)}</strong></td>
-      <td>${escapeHtml(branch.zip)}</td>
-      <td>${escapeHtml(branch.teamType)}</td>
-      <td>${escapeHtml(branch.coverageRadius)}</td>
-      <td class="${branch.maxTravel === 'Not listed' ? 'branch-cell-muted' : ''}">${escapeHtml(branch.maxTravel)}</td>
-      <td class="${branch.phone === 'Not listed' ? 'branch-cell-muted' : ''}">${escapeHtml(branch.phone)}</td>
-    `;
+    const stateSelect = $('state-select');
+    const searchInput = $('installer-search');
+    const tableBody = $('redline-table-body');
+    const status = $('redline-status');
 
-    branchTableBody.appendChild(tr);
-  });
-}
+    if (!stateSelect || !tableBody || !status) return;
 
-
-
-// --------------------------------------------------------------------------
-// State Redlines Directory Controller
-// --------------------------------------------------------------------------
-const stateSelect = $('state-select');
-const installerSearch = $('installer-search');
-const sortSelect = $('sort-select');
-const installersGrid = $('installers-grid');
-const installersTableWrap = $('installers-table-wrap');
-const installersTableBody = $('installers-table-body');
-const btnViewCards = $('btn-view-cards');
-const btnViewTable = $('btn-view-table');
-
-let currentState = 'FL'; // Default to Florida as requested, or popular
-let currentViewMode = 'cards'; // 'cards' | 'table'
-
-// Initialize State Select Dropdown
-function initStateDropdown() {
-  if (!stateSelect || !window.US_STATES) return;
-  stateSelect.innerHTML = '';
-
-  window.US_STATES.forEach(st => {
-    const option = document.createElement('option');
-    option.value = st.code;
-    option.textContent = `${st.name} (${st.code})`;
-    if (st.code === currentState) option.selected = true;
-    stateSelect.appendChild(option);
-  });
-
-  stateSelect.addEventListener('change', (e) => {
-    currentState = e.target.value;
-    updateActiveStateChip(currentState);
-    renderRedlines();
-  });
-}
-
-// Quick State Chips Handlers
-function initQuickChips() {
-  document.querySelectorAll('.state-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      const stateCode = chip.getAttribute('data-state');
-      if (stateCode) {
-        currentState = stateCode;
-        if (stateSelect) stateSelect.value = stateCode;
-        updateActiveStateChip(currentState);
-        renderRedlines();
-      }
+    stateSelect.innerHTML = '';
+    data.US_STATES.forEach((state) => {
+      const option = document.createElement('option');
+      option.value = state.code;
+      option.textContent = `${state.name} (${state.code})`;
+      stateSelect.appendChild(option);
     });
-  });
-  updateActiveStateChip(currentState);
-}
 
-function updateActiveStateChip(code) {
-  document.querySelectorAll('.state-chip').forEach(chip => {
-    if (chip.getAttribute('data-state') === code) {
-      chip.classList.add('active');
-    } else {
-      chip.classList.remove('active');
+    stateSelect.value = 'FL';
+
+    function render() {
+      const stateCode = stateSelect.value;
+      const stateName = data.STATE_NAME_BY_CODE[stateCode] || stateCode;
+      const query = (searchInput?.value || '').trim().toLowerCase();
+      const allRows = data.getInstallersForState(stateCode);
+      const rows = allRows.filter((row) => !query || row.installer.toLowerCase().includes(query));
+      const numericRates = allRows.filter((row) => typeof row.redline === 'number').map((row) => row.redline);
+      const lowest = numericRates.length ? Math.min(...numericRates) : null;
+
+      status.textContent = `${stateName}: ${allRows.length} applicable installer${allRows.length === 1 ? '' : 's'}${query ? `, ${rows.length} shown after filter` : ''}.`;
+
+      tableBody.innerHTML = '';
+
+      if (!rows.length) {
+        tableBody.innerHTML = `<tr><td class="empty-row" colspan="3">No installers match this filter.</td></tr>`;
+        return;
+      }
+
+      rows.forEach((row) => {
+        const tr = document.createElement('tr');
+        const isLowest = typeof row.redline === 'number' && row.redline === lowest;
+        const redlineText = row.redline === null ? 'N/A' : `$${formatPpw(row.redline)} / W`;
+        const note = row.notes ? `<span class="row-note">${escapeHtml(row.notes)}</span>` : '';
+        const scopeText = row.sourceScope || row.coverageType || '';
+        tr.innerHTML = `
+          <td><strong>${escapeHtml(row.installer)}</strong></td>
+          <td><span class="rate ${isLowest ? 'lowest' : ''} ${row.redline === null ? 'na' : ''}">${redlineText}</span></td>
+          <td>
+            <span class="source-scope">${escapeHtml(scopeText)}</span>
+            ${note}
+          </td>
+        `;
+        tableBody.appendChild(tr);
+      });
     }
-  });
-}
 
-// View Toggle (Cards vs Table)
-if (btnViewCards && btnViewTable) {
-  btnViewCards.addEventListener('click', () => {
-    currentViewMode = 'cards';
-    btnViewCards.classList.add('active');
-    btnViewCards.setAttribute('aria-pressed', 'true');
-    btnViewTable.classList.remove('active');
-    btnViewTable.setAttribute('aria-pressed', 'false');
-    installersGrid.classList.remove('hidden');
-    installersTableWrap.classList.add('hidden');
-  });
-
-  btnViewTable.addEventListener('click', () => {
-    currentViewMode = 'table';
-    btnViewTable.classList.add('active');
-    btnViewTable.setAttribute('aria-pressed', 'true');
-    btnViewCards.classList.remove('active');
-    btnViewCards.setAttribute('aria-pressed', 'false');
-    installersGrid.classList.add('hidden');
-    installersTableWrap.classList.remove('hidden');
-  });
-}
-
-// Search & Sort Listeners
-if (installerSearch) {
-  installerSearch.addEventListener('input', () => renderRedlines());
-}
-if (sortSelect) {
-  sortSelect.addEventListener('change', () => renderRedlines());
-}
-
-// Render Redlines UI for Selected State
-function renderRedlines() {
-  if (!window.getInstallersForState) return;
-
-  const rawInstallers = window.getInstallersForState(currentState);
-  const stateObj = window.US_STATES.find(s => s.code === currentState) || { code: currentState, name: currentState };
-  const stats = window.getStateStats(rawInstallers);
-
-  // Update Stats Banner
-  if ($('stat-state-name')) $('stat-state-name').textContent = `${stateObj.name} (${stateObj.code})`;
-  if ($('stat-lowest-rate')) {
-    $('stat-lowest-rate').innerHTML = stats.lowest !== null 
-      ? `$${stats.lowest.toFixed(2)} <span class="rate-unit">/ W</span>` 
-      : 'N/A';
-  }
-  if ($('stat-lowest-installer')) {
-    $('stat-lowest-installer').textContent = stats.lowestInstallers && stats.lowestInstallers.length 
-      ? `${stats.lowestInstallers.join(' & ')} (Best Rate)` 
-      : 'No active rate';
-  }
-  if ($('stat-average-rate')) {
-    $('stat-average-rate').innerHTML = stats.average !== null 
-      ? `$${stats.average} <span class="rate-unit">/ W</span>` 
-      : '—';
-  }
-  if ($('stat-installer-count')) {
-    $('stat-installer-count').textContent = `${rawInstallers.length} Installers`;
+    stateSelect.addEventListener('change', render);
+    searchInput?.addEventListener('input', render);
+    render();
   }
 
-  // Filter by search query
-  const query = (installerSearch ? installerSearch.value : '').trim().toLowerCase();
-  let filtered = rawInstallers.filter(item => {
-    if (!query) return true;
-    return item.installer.toLowerCase().includes(query) ||
-           item.coverageType.toLowerCase().includes(query) ||
-           (item.notes && item.notes.toLowerCase().includes(query));
-  });
+  function initWarehouses() {
+    if (!data) return;
 
-  // Sort
-  const sortBy = sortSelect ? sortSelect.value : 'lowest';
-  filtered.sort((a, b) => {
-    if (sortBy === 'lowest') {
-      if (a.redline === null) return 1;
-      if (b.redline === null) return -1;
-      return a.redline - b.redline;
-    } else if (sortBy === 'highest') {
-      if (a.redline === null) return 1;
-      if (b.redline === null) return -1;
-      return b.redline - a.redline;
-    } else if (sortBy === 'name') {
-      return a.installer.localeCompare(b.installer);
+    const stateSelect = $('branch-state-select');
+    const tableBody = $('branch-table-body');
+    const status = $('branch-status');
+
+    if (!stateSelect || !tableBody || !status) return;
+
+    const options = [{ code: 'ALL', name: 'All states / territories' }, ...data.US_STATES, { code: 'PR', name: 'Puerto Rico' }];
+    stateSelect.innerHTML = '';
+
+    options.forEach((state) => {
+      const option = document.createElement('option');
+      option.value = state.code;
+      option.textContent = state.code === 'ALL' ? state.name : `${state.name} (${state.code})`;
+      stateSelect.appendChild(option);
+    });
+
+    stateSelect.value = 'ALL';
+
+    function mapsUrl(address) {
+      const cleaned = String(address)
+        .replace(/\s*\(ZIP not listed\)\s*/i, '')
+        .replace(/,\s*USA\s*$/i, '');
+      return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cleaned)}`;
     }
-    return 0;
-  });
 
-  // Render Cards
-  installersGrid.innerHTML = '';
-  installersTableBody.innerHTML = '';
+    function render() {
+      const stateCode = stateSelect.value;
+      const rows = data.getBranchesForState(stateCode);
+      const label = stateCode === 'ALL'
+        ? 'All locations'
+        : stateCode === 'PR'
+          ? 'Puerto Rico'
+          : (data.STATE_NAME_BY_CODE[stateCode] || stateCode);
 
-  const feedbackEl = $('results-feedback');
-  if (filtered.length === 0) {
-    const emptyHtml = `
-      <div class="no-results-card">
-        <h3>No installers match "${escapeHtml(query)}" in ${stateObj.name}</h3>
-        <p>Try clearing your search query or select another state.</p>
-      </div>
-    `;
-    installersGrid.innerHTML = emptyHtml;
-    installersTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px;">No installers found.</td></tr>`;
-    if (feedbackEl) feedbackEl.textContent = `Showing 0 installers for ${stateObj.name}.`;
-    return;
+      status.textContent = `${label}: ${rows.length} branch${rows.length === 1 ? '' : 'es'} listed in the source.`;
+      tableBody.innerHTML = '';
+
+      if (!rows.length) {
+        tableBody.innerHTML = `<tr><td class="empty-row" colspan="5">No OWE branch address is listed for ${escapeHtml(label)} in the source.</td></tr>`;
+        return;
+      }
+
+      rows.forEach((branch) => {
+        const tr = document.createElement('tr');
+        const url = mapsUrl(branch.address);
+        tr.innerHTML = `
+          <td><strong>${escapeHtml(branch.branch)}</strong></td>
+          <td><a class="address-link" href="${url}" target="_blank" rel="noopener noreferrer">${escapeHtml(branch.address)}</a></td>
+          <td>${escapeHtml(branch.coverageRadius)}</td>
+          <td>${escapeHtml(branch.maxTravel)}</td>
+          <td>${escapeHtml(branch.teamType)}</td>
+        `;
+        tableBody.appendChild(tr);
+      });
+    }
+
+    stateSelect.addEventListener('change', render);
+    render();
   }
 
-  if (feedbackEl) {
-    feedbackEl.textContent = `Showing ${filtered.length} installer redlines for ${stateObj.name} (${stateObj.code}).`;
-  }
+  function initProposalCalculator() {
+    const form = $('calculator-form');
+    if (!form) return;
 
-  filtered.forEach(item => {
-    const isLowest = stats.lowest !== null && item.redline === stats.lowest;
-    const isNA = item.redline === null;
+    const fields = {
+      customerName: $('customerName'),
+      lenderProgram: $('lenderProgram'),
+      systemSize: $('systemSize'),
+      basePpw: $('basePpw'),
+      grossPpw: $('grossPpw'),
+      customAdder: $('customAdder'),
+      batteryName: $('batteryName'),
+      batteryAmount: $('batteryAmount'),
+      monthlyPayment: $('monthlyPayment')
+    };
 
-    // 1. Build Card Element
-    const card = document.createElement('div');
-    card.className = `installer-card ${isLowest ? 'is-lowest' : ''}`;
+    const validation = $('validation');
+    const breakdown = $('breakdown');
+    const copyButton = $('copyButton');
+    const copyStatus = $('copyStatus');
 
-    let notesHtml = '';
-    if (item.notes) {
-      const isWarning = item.notes.toLowerCase().includes('n/a') || item.notes.toLowerCase().includes('not available');
-      notesHtml = `
-        <div class="card-notes ${isWarning ? 'na-warning' : ''}">
-          <span>${escapeHtml(item.notes)}</span>
-        </div>
+    let activePpw = null;
+    let copyText = '';
+
+    function clear(message = 'Enter proposal details to see the calculation.') {
+      breakdown.innerHTML = `<p class="muted">${escapeHtml(message)}</p>`;
+      copyButton.disabled = true;
+      copyText = '';
+    }
+
+    function render(showErrors = false) {
+      const size = numberFromInput(fields.systemSize);
+      const baseInput = numberFromInput(fields.basePpw);
+      const grossInput = numberFromInput(fields.grossPpw);
+      const custom = numberFromInput(fields.customAdder) ?? 0;
+      const battery = numberFromInput(fields.batteryAmount) ?? 0;
+      const payment = numberFromInput(fields.monthlyPayment);
+
+      validation.textContent = '';
+      copyStatus.textContent = '';
+
+      const values = [size, baseInput, grossInput, custom, battery, payment];
+      if (values.some((value) => value !== null && !isValidNumber(value))) {
+        validation.textContent = 'Use zero or a positive number in each amount field.';
+        clear();
+        return;
+      }
+
+      if (!size || size <= 0) {
+        if (showErrors) validation.textContent = 'Enter a system size greater than zero.';
+        clear();
+        return;
+      }
+
+      if (baseInput === null && grossInput === null) {
+        if (showErrors) validation.textContent = 'Enter either Base PPW or Gross PPW.';
+        clear();
+        return;
+      }
+
+      const adders = custom + battery;
+      const adderPpw = adders / (size * 1000);
+      let base = baseInput;
+      let gross = grossInput;
+
+      if (activePpw === 'gross' || (grossInput !== null && baseInput === null)) {
+        gross = grossInput;
+        base = gross - adderPpw;
+      } else {
+        base = baseInput;
+        gross = base + adderPpw;
+      }
+
+      if (!isValidNumber(base) || !isValidNumber(gross)) {
+        validation.textContent = 'Adders are greater than the Gross PPW. Increase Gross PPW or use Base PPW.';
+        clear();
+        return;
+      }
+
+      const contractTotal = gross * size * 1000;
+      const rows = [
+        ['Base PPW', `$${formatPpw(base)} / W`],
+        ['Gross PPW', `$${formatPpw(gross)} / W`],
+        ['System size', `${size} kW`],
+        ['Total adders', currency(adders)],
+        ['Contract total', currency(contractTotal)]
+      ];
+
+      if (payment !== null) rows.push(['Monthly payment', currency(payment)]);
+
+      const customer = fields.customerName.value.trim();
+      const lender = fields.lenderProgram.value;
+
+      breakdown.innerHTML = `
+        ${customer ? `<div class="breakdown-section">${escapeHtml(customer)}</div>` : ''}
+        ${lender ? `<div class="muted">${escapeHtml(lender)}</div>` : ''}
+        ${rows.map(([label, value]) => `<div class="breakdown-row"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join('')}
       `;
+
+      copyText = [
+        customer,
+        lender,
+        ...rows.map(([label, value]) => `${label}: ${value}`),
+        custom > 0 ? `Custom adder: ${currency(custom)}` : '',
+        battery > 0 ? `${fields.batteryName.value.trim() || 'Battery'}: ${currency(battery)}` : ''
+      ].filter(Boolean).join('\n');
+
+      copyButton.disabled = false;
     }
 
-    const priceDisplay = isNA ? 'N/A' : `$${item.redline.toFixed(2)}`;
-    const unitDisplay = isNA ? '' : '<span class="price-unit">/ Watt</span>';
+    fields.basePpw.addEventListener('input', () => {
+      activePpw = 'base';
+      render();
+    });
 
-    card.innerHTML = `
-      <div class="card-header">
-        <div class="installer-title-wrap">
-          <h3 class="installer-name">${escapeHtml(item.installer)}</h3>
-          <span class="installer-coverage">${escapeHtml(item.coverageType)}</span>
-        </div>
-        ${isLowest ? '<span class="lowest-pill">Lowest Rate</span>' : ''}
-      </div>
+    fields.grossPpw.addEventListener('input', () => {
+      activePpw = 'gross';
+      render();
+    });
 
-      <div class="card-pricing">
-        <span class="price-val ${isLowest ? 'rate-lowest' : ''}">${priceDisplay}</span>
-        ${unitDisplay}
-      </div>
+    ['systemSize', 'customAdder', 'batteryName', 'batteryAmount', 'monthlyPayment', 'customerName', 'lenderProgram'].forEach((key) => {
+      fields[key].addEventListener('input', () => render());
+      if (fields[key].tagName === 'SELECT') fields[key].addEventListener('change', () => render());
+    });
 
-      ${notesHtml}
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      render(true);
+    });
 
-      <div class="card-footer">
-        <button type="button" class="card-action-btn" data-redline="${item.redline ?? ''}" data-installer="${escapeHtml(item.installer)}" ${isNA ? 'disabled' : ''}>
-          <span>Use in Calculator &rarr;</span>
-        </button>
-      </div>
-    `;
+    form.addEventListener('reset', () => {
+      window.setTimeout(() => {
+        activePpw = null;
+        validation.textContent = '';
+        copyStatus.textContent = '';
+        clear();
+      }, 0);
+    });
 
-    installersGrid.appendChild(card);
-
-    // 2. Build Table Row
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>
-        <span class="table-installer-name">${escapeHtml(item.installer)}</span>
-        ${isLowest ? ' <span class="table-lowest-label">(Lowest)</span>' : ''}
-      </td>
-      <td><strong>${stateObj.code}</strong></td>
-      <td>
-        <span class="table-rate-val ${isLowest ? 'best' : ''}">${priceDisplay}</span>
-        ${!isNA ? ' <span class="table-unit">/W</span>' : ''}
-      </td>
-      <td><span class="installer-coverage">${escapeHtml(item.coverageType)}</span></td>
-      <td><span class="table-notes">${item.notes ? escapeHtml(item.notes) : '—'}</span></td>
-      <td class="text-right">
-        <button type="button" class="button button-secondary card-action-btn" style="height:34px; padding:0 12px; font-size:0.8rem;" data-redline="${item.redline ?? ''}" data-installer="${escapeHtml(item.installer)}" ${isNA ? 'disabled' : ''}>
-          Use Rate &rarr;
-        </button>
-      </td>
-    `;
-    installersTableBody.appendChild(tr);
-  });
-
-  // Attach "Use in Calculator" click listeners
-  attachRateButtonListeners();
-}
-
-function attachRateButtonListeners() {
-  document.querySelectorAll('[data-redline]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const redlineVal = btn.getAttribute('data-redline');
-      const installerName = btn.getAttribute('data-installer');
-      if (!redlineVal || isNaN(Number(redlineVal))) return;
-
-      // Transfer rate to Calculator Base PPW
-      if (fields.basePpw) {
-        fields.basePpw.value = Number(redlineVal).toFixed(2);
-        activePpw = 'base';
-      }
-
-      // Switch to Tools view and scroll to calculator
-      window.location.hash = 'tools';
-      switchView('tools', { scrollId: 'calculator-form' });
-
-      // Run calculation
-      update('base');
-
-      // Highlight the Base PPW field with a nice glow
-      fields.basePpw.focus();
-      if (validation) {
-        validation.style.color = '#047857';
-        validation.textContent = `Applied ${installerName} redline ($${Number(redlineVal).toFixed(2)}/W) to Base PPW!`;
+    copyButton.addEventListener('click', async () => {
+      if (!copyText) return;
+      try {
+        await navigator.clipboard.writeText(copyText);
+        copyStatus.textContent = 'Copied.';
+      } catch {
+        copyStatus.textContent = 'Copy failed. Select the text and copy it manually.';
       }
     });
-  });
-}
 
-function escapeHtml(str) {
-  if (!str) return '';
-  return String(str).replace(/[&<>"']/g, (char) => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;'
-  })[char]);
-}
-
-
-// --------------------------------------------------------------------------
-// Solar PPW Calculator Proposal Breakdown Logic (Preserved & Enhanced)
-// --------------------------------------------------------------------------
-const fields = ['customerName', 'lenderProgram', 'systemSize', 'grossPpw', 'basePpw', 'customAdder', 'batteryName', 'batteryAmount', 'monthlyPayment'].reduce((acc, id) => ({ ...acc, [id]: $(id) }), {});
-const form = $('calculator-form');
-const validation = $('validation');
-const breakdown = $('breakdown');
-const copyButton = $('copyButton');
-const copyStatus = $('copyStatus');
-let activePpw = null;
-let breakdownText = '';
-
-const number = (input) => !input || input.value.trim() === '' ? null : Number(input.value);
-const currency = (value) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(value);
-const ppw = (value) => Number(value).toFixed(2);
-const validNumber = (value) => Number.isFinite(value) && value >= 0;
-
-function update(source = activePpw, showErrors = false) {
-  const size = number(fields.systemSize);
-  const gross = number(fields.grossPpw);
-  const base = number(fields.basePpw);
-  const custom = number(fields.customAdder) ?? 0;
-  const battery = number(fields.batteryAmount) ?? 0;
-  const invalid = [size, gross, base, custom, battery].some((value) => value !== null && !validNumber(value));
-  validation.textContent = '';
-  validation.style.color = '#dc2626';
-  copyStatus.textContent = '';
-
-  if (invalid) return clearResults('Use zero or a positive number for all amount fields.');
-  if (!size || size <= 0) {
-    if (showErrors) validation.textContent = 'Enter a system size greater than zero to calculate PPW and the contract total.';
-    return renderProposal({ size, gross, base, custom, battery });
+    clear();
   }
 
-  const adders = custom + battery;
-  const adjustment = adders / (size * 1000);
-  let finalGross = gross;
-  let finalBase = base;
-  let derived = null;
-  let calculatedLabel = '';
+  function initQuickPpw() {
+    const form = $('quickPpwForm');
+    const loanInput = $('quickLoanAmount');
+    const sizeInput = $('quickSystemSize');
+    const unitSelect = $('quickSystemUnit');
+    const result = $('quickPpwResult');
+    const message = $('quickPpwMessage');
+    const reset = $('quickPpwReset');
 
-  if (source === 'base' && validNumber(base)) {
-    finalGross = base + adjustment;
-    derived = finalGross;
-    calculatedLabel = 'Calculated Gross PPW';
-  } else if (source === 'gross' && validNumber(gross)) {
-    finalBase = gross - adjustment;
-    derived = finalBase;
-    calculatedLabel = 'Calculated Base PPW';
-  } else if (validNumber(gross) && !validNumber(base)) {
-    finalBase = gross - adjustment;
-    derived = finalBase;
-    calculatedLabel = 'Calculated Base PPW';
-  } else if (validNumber(base) && !validNumber(gross)) {
-    finalGross = base + adjustment;
-    derived = finalGross;
-    calculatedLabel = 'Calculated Gross PPW';
-  } else if (!validNumber(gross) && !validNumber(base)) {
-    if (showErrors) validation.textContent = 'Enter either Gross PPW or Base PPW to calculate the proposal total.';
-    return renderProposal({ size, gross, base, custom, battery });
-  }
+    if (!form || !loanInput || !sizeInput || !unitSelect || !result || !message) return;
 
-  if (!validNumber(finalGross) || !validNumber(finalBase) || finalBase < 0) {
-    return clearResults('The adders are greater than the selected Gross PPW. Increase Gross PPW or use Base PPW.');
-  }
+    function calculate(showErrors = false) {
+      const loan = numberFromInput(loanInput);
+      const size = numberFromInput(sizeInput);
 
-  renderProposal({ size, gross: finalGross, base: finalBase, derived, calculatedLabel, custom, battery });
-}
+      if (loan === null || size === null) {
+        result.textContent = '-';
+        message.textContent = showErrors ? 'Enter both the loan amount and system size.' : 'Add the loan amount and system size.';
+        return;
+      }
 
-function clearResults(message) {
-  validation.textContent = message.includes('Add a') ? '' : message;
-  breakdown.innerHTML = `<p class="empty-state">${message}</p>`;
-  copyButton.disabled = true;
-  breakdownText = '';
-}
+      if (!isValidNumber(loan) || !isValidNumber(size) || size <= 0) {
+        result.textContent = '-';
+        message.textContent = 'Use a positive system size and a zero or positive loan amount.';
+        return;
+      }
 
-function renderProposal({ size, gross, base, derived = null, calculatedLabel = '', custom, battery }) {
-  const name = fields.customerName.value.trim();
-  const program = fields.lenderProgram.value;
-  const payment = number(fields.monthlyPayment);
-  const hasSize = validNumber(size) && size > 0;
-  const hasGross = validNumber(gross);
-  const hasBase = validNumber(base);
-  const hasPayment = validNumber(payment);
-  const hasDetails = Boolean(name) || hasSize || hasGross || hasBase || custom > 0 || battery > 0 || hasPayment;
-
-  if (!hasDetails) {
-    breakdown.innerHTML = '<p class="empty-state">Start entering proposal details to build your breakdown.</p>';
-    copyButton.disabled = true;
-    breakdownText = '';
-    return;
-  }
-
-  const contract = hasSize && hasGross ? gross * size * 1000 : null;
-  const adderLines = [];
-  if (custom > 0) adderLines.push(`Custom Adder: ${currency(custom)}`);
-  if (battery > 0) adderLines.push(`${fields.batteryName.value.trim() || 'Battery'}: ${currency(battery)}`);
-
-  const identityLines = [
-    name,
-    hasBase ? `${ppw(base)} PPW (Base)` : hasGross ? `${ppw(gross)} PPW (Gross)` : '',
-    hasSize ? `${size} kW System` : ''
-  ].filter(Boolean);
-
-  const financeLines = [
-    program,
-    contract === null ? '' : `Contract Total: ${currency(contract)}`,
-    hasPayment ? `Monthly: ${currency(payment)}` : ''
-  ].filter(Boolean);
-
-  breakdownText = [
-    identityLines.join('\n'),
-    financeLines.join('\n'),
-    adderLines.length ? `Adders:\n${adderLines.join('\n')}` : ''
-  ].filter(Boolean).join('\n\n');
-
-  const calculated = derived === null ? '' : `
-    <div class="calculated-ppw">
-      <span>${escapeHtml(calculatedLabel)}</span>
-      <strong>${ppw(derived)} PPW</strong>
-    </div>
-  `;
-
-  const identity = `
-    ${name ? `<div class="customer">${escapeHtml(name)}</div>` : ''}
-    ${hasBase ? `<div class="ppw">${ppw(base)} Base PPW</div>` : hasGross ? `<div class="ppw">${ppw(gross)} Gross PPW</div>` : ''}
-    ${hasSize ? `<div>${escapeHtml(String(size))} kW System</div>` : ''}
-  `;
-
-  const finance = `
-    <div class="finance">
-      <div><strong>${escapeHtml(program)}</strong></div>
-      ${contract === null ? '' : `<div class="amount">${currency(contract)}</div>`}
-      ${hasPayment ? `<div>${currency(payment)} / month</div>` : ''}
-    </div>
-  `;
-
-  const adders = adderLines.length ? `<div class="adders">Adders:<br>${adderLines.map(escapeHtml).join('<br>')}</div>` : '';
-
-  breakdown.innerHTML = `${calculated}<div class="breakdown-content">${identity}${finance}${adders}</div>`;
-  copyButton.disabled = false;
-}
-
-// Attach event listeners for Proposal Calculator
-['grossPpw', 'basePpw'].forEach((id) => {
-  if (fields[id]) {
-    fields[id].addEventListener('input', () => {
-      activePpw = id === 'grossPpw' ? 'gross' : 'base';
-      update(activePpw);
-    });
-  }
-});
-
-['systemSize', 'customAdder', 'batteryAmount', 'batteryName', 'customerName', 'lenderProgram', 'monthlyPayment'].forEach((id) => {
-  if (fields[id]) {
-    fields[id].addEventListener('input', () => update(activePpw));
-  }
-});
-
-if (form) {
-  form.addEventListener('submit', (event) => {
-    event.preventDefault();
-    update(activePpw, true);
-  });
-  form.addEventListener('reset', () => setTimeout(() => {
-    activePpw = null;
-    copyStatus.textContent = '';
-    clearResults('Add a system size and either Gross PPW or Base PPW to see your proposal.');
-  }, 0));
-}
-
-if (copyButton) {
-  copyButton.addEventListener('click', async () => {
-    try {
-      await navigator.clipboard.writeText(breakdownText);
-      copyStatus.textContent = '✓ Breakdown copied to clipboard.';
-    } catch {
-      copyStatus.textContent = 'Copy failed. Please select and copy manually.';
+      const watts = unitSelect.value === 'kw' ? size * 1000 : size;
+      result.textContent = `$${formatPpw(loan / watts)} / W`;
+      message.textContent = `${currency(loan)} / ${new Intl.NumberFormat('en-US').format(watts)} watts`;
     }
-  });
-}
 
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      calculate(true);
+    });
 
-// --------------------------------------------------------------------------
-// Quick PPW Calculator Logic (Preserved & Enhanced)
-// --------------------------------------------------------------------------
-const quickPpwForm = $('quickPpwForm');
-const quickLoanAmount = $('quickLoanAmount');
-const quickSystemSize = $('quickSystemSize');
-const quickSystemUnit = $('quickSystemUnit');
-const quickPpwResult = $('quickPpwResult');
-const quickPpwMessage = $('quickPpwMessage');
+    [loanInput, sizeInput].forEach((input) => input.addEventListener('input', () => calculate()));
+    unitSelect.addEventListener('change', () => calculate());
 
-function calculateQuickPpw(showError = false) {
-  if (!quickLoanAmount || !quickSystemSize) return;
-  const loanAmount = number(quickLoanAmount);
-  const systemSize = number(quickSystemSize);
-
-  if (loanAmount === null || systemSize === null) {
-    quickPpwResult.textContent = '—';
-    quickPpwMessage.textContent = showError ? 'Enter both the loan amount and system size.' : 'Add your loan amount and system size.';
-    return;
+    reset?.addEventListener('click', () => {
+      form.reset();
+      calculate();
+      loanInput.focus();
+    });
   }
-  if (!validNumber(loanAmount) || !validNumber(systemSize) || systemSize <= 0) {
-    quickPpwResult.textContent = '—';
-    quickPpwMessage.textContent = 'Use a positive system size and a zero or positive loan amount.';
-    return;
+
+  initLegacyHashRedirects();
+
+  if (page === 'redlines') initRedlines();
+  if (page === 'warehouses-owe') initWarehouses();
+  if (page === 'home') {
+    initProposalCalculator();
+    initQuickPpw();
   }
-  const watts = quickSystemUnit.value === 'kw' ? systemSize * 1000 : systemSize;
-  quickPpwResult.textContent = `$${ppw(loanAmount / watts)} / W`;
-  quickPpwMessage.textContent = `${currency(loanAmount)} ÷ ${new Intl.NumberFormat('en-US').format(watts)} watts`;
-}
-
-if (quickLoanAmount && quickSystemSize && quickSystemUnit) {
-  [quickLoanAmount, quickSystemSize, quickSystemUnit].forEach((input) => {
-    input.addEventListener('input', () => calculateQuickPpw());
-  });
-  quickSystemUnit.addEventListener('change', () => calculateQuickPpw());
-}
-
-if (quickPpwForm) {
-  quickPpwForm.addEventListener('submit', (event) => {
-    event.preventDefault();
-    calculateQuickPpw(true);
-  });
-}
-
-if ($('quickPpwReset')) {
-  $('quickPpwReset').addEventListener('click', () => {
-    quickPpwForm.reset();
-    calculateQuickPpw();
-    quickLoanAmount.focus();
-  });
-}
-
-
-// --------------------------------------------------------------------------
-// Initialization on DOM Content Loaded
-// --------------------------------------------------------------------------
-document.addEventListener('DOMContentLoaded', () => {
-  initStateDropdown();
-  initQuickChips();
-  renderRedlines();
-  initBranchLocationsTable();
-  handleHashRoute();
-});
+})();
