@@ -430,6 +430,62 @@
                 </div>
               </div>
             </div>
+
+            <!-- Complete OWE Branch Locations Table Section -->
+            <div class="branch-locations-section" id="branch-locations">
+              <div class="branch-section-header">
+                <div class="branch-header-info">
+                  <div class="branch-header-badge">OWE Network</div>
+                  <h3 class="branch-header-title">Our World Energy — Branch Locations</h3>
+                  <p class="branch-header-sub">Complete branch directory captured from the OWE Branch Locations page across 16 states and territories.</p>
+                </div>
+
+                <!-- State Dropdown & Count Badge -->
+                <div class="branch-filter-controls">
+                  <div class="branch-select-group">
+                    <label for="branch-state-select" class="branch-select-label">Filter by State:</label>
+                    <div class="select-wrapper branch-select-wrapper">
+                      <select id="branch-state-select" class="custom-select branch-state-select" aria-label="Filter warehouse branch locations by state">
+                        <option value="ALL">All States</option>
+                        <!-- Populated dynamically with all states that have branches -->
+                      </select>
+                      <div class="select-arrow" aria-hidden="true">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                          <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Branch Count Indicator -->
+                  <div class="branch-count-wrap" aria-live="polite">
+                    <span class="branch-count-badge" id="branch-count-badge">All States - 39 warehouses</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Responsive Scrollable Table Container -->
+              <div class="branch-table-scroll" tabindex="0" role="region" aria-label="OWE Warehouse Branch Locations Table">
+                <table class="branch-table" id="branch-locations-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Warehouse/Branch Name</th>
+                      <th scope="col">Complete Address</th>
+                      <th scope="col">City</th>
+                      <th scope="col">State</th>
+                      <th scope="col">ZIP Code</th>
+                      <th scope="col">Team Type</th>
+                      <th scope="col">Coverage Radius</th>
+                      <th scope="col">Max Travel Distance</th>
+                      <th scope="col">Phone</th>
+                    </tr>
+                  </thead>
+                  <tbody id="branch-table-body">
+                    <!-- Rendered dynamically via script.js -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
 
           <!-- Sunvena Panel -->

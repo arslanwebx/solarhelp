@@ -153,6 +153,102 @@ document.querySelectorAll('.view-rates-btn').forEach(btn => {
   });
 });
 
+// --------------------------------------------------------------------------
+// OWE Branch Locations Table Controller
+// --------------------------------------------------------------------------
+const branchStateSelect = $('branch-state-select');
+const branchCountBadge = $('branch-count-badge');
+const branchTableBody = $('branch-table-body');
+
+let currentBranchState = 'ALL';
+
+function initBranchLocationsTable() {
+  if (!branchStateSelect || !window.OWE_BRANCH_LOCATIONS) return;
+
+  // Extract unique states from OWE_BRANCH_LOCATIONS
+  const statesSet = new Set();
+  window.OWE_BRANCH_LOCATIONS.forEach(b => {
+    if (b.state) statesSet.add(b.state);
+  });
+  const sortedStates = Array.from(statesSet).sort();
+
+  branchStateSelect.innerHTML = '<option value="ALL">All States</option>';
+  sortedStates.forEach(st => {
+    const opt = document.createElement('option');
+    opt.value = st;
+    opt.textContent = st;
+    branchStateSelect.appendChild(opt);
+  });
+
+  branchStateSelect.addEventListener('change', (e) => {
+    currentBranchState = e.target.value;
+    renderBranchLocations(currentBranchState);
+  });
+
+  renderBranchLocations(currentBranchState);
+}
+
+function renderBranchLocations(selectedState = 'ALL') {
+  if (!branchTableBody || !window.OWE_BRANCH_LOCATIONS) return;
+
+  const branches = window.getBranchesForState ? window.getBranchesForState(selectedState) : window.OWE_BRANCH_LOCATIONS;
+
+  // Update Branch Count Badge (e.g., "Texas - 5 warehouses", "All States - 39 warehouses")
+  if (branchCountBadge) {
+    const count = branches.length;
+    const label = selectedState === 'ALL' ? 'All States' : selectedState;
+    branchCountBadge.textContent = `${label} - ${count} warehouse${count === 1 ? '' : 's'}`;
+  }
+
+  branchTableBody.innerHTML = '';
+
+  if (branches.length === 0) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td colspan="9" class="empty-table-msg" style="text-align:center; padding:30px; color:#64748b;">No warehouse branches found for ${escapeHtml(selectedState)}.</td>`;
+    branchTableBody.appendChild(tr);
+    return;
+  }
+
+  branches.forEach(branch => {
+    const tr = document.createElement('tr');
+    // Stable unique ID as key attribute & DOM id
+    tr.id = branch.id;
+    tr.setAttribute('key', branch.id);
+    tr.setAttribute('data-id', branch.id);
+
+    // Verified Google Maps URL using verified mapQuery
+    const fullAddress = branch.mapQuery || branch.completeAddress;
+    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
+
+    tr.innerHTML = `
+      <td class="branch-name-cell">${escapeHtml(branch.branch)}</td>
+      <td>
+        <a href="${googleMapsUrl}" target="_blank" rel="noopener noreferrer" class="branch-address-link" title="Open ${escapeHtml(fullAddress)} in Google Maps">
+          <svg class="branch-map-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+            <circle cx="12" cy="10" r="3"></circle>
+          </svg>
+          <span>${escapeHtml(branch.completeAddress)}</span>
+        </a>
+      </td>
+      <td>${escapeHtml(branch.city)}</td>
+      <td><strong>${escapeHtml(branch.state)}</strong></td>
+      <td>${escapeHtml(branch.zip)}</td>
+      <td>
+        <span class="team-badge ${branch.teamType === 'In House' ? 'in-house' : 'integrated'}">
+          ${escapeHtml(branch.teamType)}
+        </span>
+      </td>
+      <td>${escapeHtml(branch.coverageRadius)}</td>
+      <td class="${branch.maxTravel === 'Not listed' ? 'branch-cell-muted' : ''}">${escapeHtml(branch.maxTravel)}</td>
+      <td class="${branch.phone === 'Not listed' ? 'branch-cell-muted' : ''}">${escapeHtml(branch.phone)}</td>
+    `;
+
+    branchTableBody.appendChild(tr);
+  });
+}
+
+
 
 // --------------------------------------------------------------------------
 // State Redlines Directory Controller
@@ -698,5 +794,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initStateDropdown();
   initQuickChips();
   renderRedlines();
+  initBranchLocationsTable();
   handleHashRoute();
 });
