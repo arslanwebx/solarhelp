@@ -22,18 +22,18 @@ import BaseLayout from '../layouts/BaseLayout.astro';
               <input id="customerName" type="text" autocomplete="name" placeholder="Amanda Taylor" />
             </label>
 
-            <label class="field field-wide" for="lenderProgram">
+            <label class="field field-wide lender-program-field" for="lenderProgram">
               <span>Lender program</span>
-              <input id="lenderProgram" list="lender-options" type="text" placeholder="LightReach 25 year 2.99%" />
-              <datalist id="lender-options">
-                <option value="LightReach 25 year 2.99%"></option>
-                <option value="EnFin Lease 25 yr 2.99%"></option>
-                <option value="GoodLeap TPO 2.99%"></option>
-                <option value="SunRun 15 yr 2.99%"></option>
-                <option value="Credit Human 20 yr 8.99%"></option>
-                <option value="Concert 25 year 10.99%"></option>
-                <option value="Climate First 30.5 yr"></option>
-              </datalist>
+              <select id="lenderProgram" class="lender-program-select">
+                <option value="" selected>Select lender program...</option>
+                <option value="LightReach 25 year 2.99%">LightReach 25 year 2.99%</option>
+                <option value="EnFin Lease 25 yr 2.99%">EnFin Lease 25 yr 2.99%</option>
+                <option value="GoodLeap TPO 2.99%">GoodLeap TPO 2.99%</option>
+                <option value="SunRun 15 yr 2.99%">SunRun 15 yr 2.99%</option>
+                <option value="Credit Human 20 yr 8.99%">Credit Human 20 yr 8.99%</option>
+                <option value="Concert 25 year 10.99%">Concert 25 year 10.99%</option>
+                <option value="Climate First 30.5 yr">Climate First 30.5 yr</option>
+              </select>
             </label>
 
             <label class="field" for="systemSize">
@@ -144,8 +144,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       return `$${Number.isInteger(n) ? n : n.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')}`;
     };
 
-    // Residential users commonly paste system size either as kW (10.2) or watts (10200).
-    // Values >= 1000 are treated as watts; smaller values are treated as kW.
     function normalizeSystemSize(rawSize) {
       if (!Number.isFinite(rawSize) || rawSize <= 0) return null;
       const enteredAsWatts = rawSize >= 1000;
@@ -204,9 +202,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
       if (system) {
         if (useGross && hasGross) {
-          // Gross PPW already includes adders:
-          // Contract total = Gross PPW × watts
-          // Base PPW = (Contract total - adders) ÷ watts
           contractTotal = grossInput * system.watts;
           calculatedGross = grossInput;
           calculatedBase = (contractTotal - totalAdders) / system.watts;
@@ -216,10 +211,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             calculatedBase = null;
           }
         } else if (useBase && hasBase) {
-          // Base PPW excludes adders:
-          // Base solar price = Base PPW × watts
-          // Contract total = base solar price + adders
-          // Gross PPW = Contract total ÷ watts
           calculatedBase = baseInput;
           contractTotal = (baseInput * system.watts) + totalAdders;
           calculatedGross = contractTotal / system.watts;
