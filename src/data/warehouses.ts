@@ -26,6 +26,7 @@ export const WAREHOUSE_BRANCHES = [
   { stateCode:'NH', state:'New Hampshire', branch:'Seabrook', address:'82 Marshview Cir, Seabrook, NH 03874', coverageRadius:'150 mi', teamType:'Integrated Installer' },
   { stateCode:'NJ', state:'New Jersey', branch:'Pennsauken', address:'35 Twinbridge Dr, Pennsauken, NJ (ZIP not listed)', coverageRadius:'100 mi', teamType:'Integrated Installer' },
   { stateCode:'NM', state:'New Mexico', branch:'Albuquerque', address:'2604 Princeton Dr NE, Albuquerque, NM 87107', coverageRadius:'100 mi', teamType:'In House' },
+  { stateCode:'NM', state:'New Mexico', branch:'El Paso — NOTE: NM Coverage', address:'12305 Mercantile Ave Suite B, El Paso, TX 79928', coverageRadius:'100 mi', teamType:'Coverage Office' },
   { stateCode:'NY', state:'New York', branch:'Brooklyn', address:'1530 Pennsylvania Ave, Brooklyn, NY 11239', coverageRadius:'100 mi', teamType:'Integrated Installer' },
   { stateCode:'PR', state:'Puerto Rico', branch:'Guayanabo', address:'Guayanabo, PR 00969', coverageRadius:'100 mi', teamType:'Integrated Installer' },
   { stateCode:'RI', state:'Rhode Island', branch:'Mansfield, MA (RI Coverage)', address:'600 West St, Mansfield, MA 02048', coverageRadius:'100 mi', teamType:'Integrated Installer' },
