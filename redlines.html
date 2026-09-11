@@ -21,7 +21,7 @@
   <main class="page-shell narrow">
     <div class="page-heading">
       <h1>Installer Redlines</h1>
-      <p>Select a state to see only the installers confirmed to operate in that state, together with the redline available in the current rate sheet.</p>
+      <p>Select a state to see the installers that work there, or select an installer to see every state it covers with the applicable redline.</p>
     </div>
 
     <section class="panel directory-panel">
@@ -31,24 +31,27 @@
           <select id="state-select" aria-describedby="redline-status"></select>
         </label>
 
-        <label class="field" for="installer-search">
-          <span>Filter installer</span>
-          <input id="installer-search" type="search" placeholder="Installer name">
+        <label class="field" for="installer-select">
+          <span>Installer</span>
+          <select id="installer-select" aria-describedby="redline-status"></select>
         </label>
       </div>
 
-      <div id="redline-status" class="directory-status" aria-live="polite"></div>
+      <div id="redline-status" class="directory-status" aria-live="polite">Select a state or installer to view redlines.</div>
 
       <div class="table-scroll">
         <table class="data-table">
           <thead>
             <tr>
+              <th>State</th>
               <th>Installer</th>
               <th>Redline</th>
               <th>Coverage / note</th>
             </tr>
           </thead>
-          <tbody id="redline-table-body"></tbody>
+          <tbody id="redline-table-body">
+            <tr><td class="empty-row" colspan="4">Choose a state or installer above.</td></tr>
+          </tbody>
         </table>
       </div>
     </section>
