@@ -100,6 +100,11 @@ const largestRadius = Math.max(...WAREHOUSE_BRANCHES.map((branch) => Number.pars
         <div><strong>Source notes:</strong> The source lists the Wallingford branch with a Hudson, Massachusetts address and groups the Mansfield, MA location under Rhode Island coverage. Connecticut and Vermont are listed as active coverage states, but no branch address rows are shown for them.</div>
       </div>
     </section>
+
+    <footer class="owe-source-footer">
+      <span>OWE branch source:</span>
+      <a href="https://one.ourworldenergy.com/shared/resources/branches" target="_blank" rel="noopener noreferrer">Our World Energy Branch Resources</a>
+    </footer>
   </main>
 
   <script id="warehouse-state-data" type="application/json" is:inline set:html={statesJson}></script>
@@ -203,6 +208,9 @@ const largestRadius = Math.max(...WAREHOUSE_BRANCHES.map((branch) => Number.pars
     .route-clear{min-height:46px;padding:0 14px;border:1px solid #d4d9de;border-radius:8px;background:#fff;color:#4d555d;font-weight:700;cursor:pointer;transition:background .16s ease,border-color .16s ease,color .16s ease}.route-clear:hover{background:#f5f6f7;border-color:#bcc3c9;color:#111418}
     .premium-status{font-size:14.5px;line-height:1.45}
     .source-note{font-size:14px;line-height:1.55}
+    .owe-source-footer{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;padding:22px 12px 0;color:#70777e;font-size:13.5px}
+    .owe-source-footer a{color:#22272c;font-weight:700;text-decoration:underline;text-decoration-color:#9ba1a7;text-underline-offset:4px}
+    .owe-source-footer a:hover{color:#000;text-decoration-color:#000}
     @media(max-width:820px){.owe-toolbar{grid-template-columns:1fr;gap:14px;align-items:stretch}.owe-state-select,.owe-toolbar-copy{grid-column:1}.owe-state-select{max-width:none}.owe-toolbar-copy{justify-self:stretch}.route-tool{grid-template-columns:1fr;gap:14px}.route-input-wrap{grid-template-columns:minmax(0,1fr) auto}}
     @media(max-width:520px){.owe-adder-note{align-items:flex-start;padding:14px}.route-tool{padding:16px}.route-tool-heading{align-items:flex-start}.route-input-wrap{grid-template-columns:1fr}.route-clear{width:100%}}
   </style>
