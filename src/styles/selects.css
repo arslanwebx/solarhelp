@@ -36,6 +36,42 @@ select option {
   font-weight: 500;
 }
 
+/* Lender dropdown: clean, bright and intentionally understated. */
+.lender-program-field {
+  gap: 8px;
+}
+
+.lender-program-select {
+  min-height: 52px;
+  padding-left: 15px;
+  padding-right: 48px;
+  border-color: #d3d9de;
+  border-radius: 10px;
+  background-color: #fff;
+  background-position: right 16px center;
+  color: #16191d;
+  font-size: 14px;
+  font-weight: 620;
+  box-shadow: 0 1px 2px rgba(15,18,22,.025), 0 6px 18px rgba(15,18,22,.025);
+}
+
+.lender-program-select:hover {
+  border-color: #aeb6bd;
+  background-color: #fff;
+}
+
+.lender-program-select:focus {
+  border-color: #7e858c;
+  background-color: #fff;
+  box-shadow: 0 0 0 3px rgba(17,20,24,.065), 0 5px 16px rgba(15,18,22,.04);
+}
+
+.lender-program-select option {
+  background: #fff;
+  color: #171a1d;
+  font-weight: 500;
+}
+
 .premium-select select {
   background-color: #fff;
   border-color: #d9dee3;
@@ -58,5 +94,12 @@ select option {
     padding-left: 13px;
     padding-right: 42px;
     background-position: right 13px center;
+  }
+
+  .lender-program-select {
+    min-height: 50px;
+    padding-left: 14px;
+    padding-right: 44px;
+    background-position: right 14px center;
   }
 }
