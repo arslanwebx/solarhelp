@@ -13,14 +13,14 @@ const installerStates = US_STATES
 <BaseLayout title="Installers - SolarHelp" description="Find solar installers and available lender coverage by state.">
   <main class="page-shell installers-page">
     <section class="installers-hero" aria-labelledby="installers-title">
-      <div>
+      <div class="installers-hero-copy">
         <span class="eyebrow">SOLAR COVERAGE DIRECTORY</span>
         <h1 id="installers-title">Installers</h1>
-        <p>Select a state to see every installer currently listed for that market. Installer and lender dropdowns update automatically for the selected state.</p>
+        <p>Select a state to see the installers available in that market. The installer and lender filters update automatically based on your selection.</p>
       </div>
       <div class="installers-summary" aria-label="Installer coverage summary">
-        <div><strong>{INSTALLERS.length}</strong><span>installers</span></div>
-        <div><strong>{installerStates.length}</strong><span>states & territories</span></div>
+        <div><strong>{INSTALLERS.length}</strong><span>Installers</span></div>
+        <div><strong>{installerStates.length}</strong><span>States & territories</span></div>
       </div>
     </section>
 
@@ -189,16 +189,25 @@ const installerStates = US_STATES
         const isOnHold = note.toUpperCase() === 'ON HOLD';
         const knownLenders = lendersForSelection(stateCode, installer.name);
         const lenderMarkup = knownLenders.length
-          ? `<div class="installer-lenders"><span>Available lenders</span><div>${knownLenders.map((lender) => `<b>${escapeHtml(lender.name)}</b>`).join('')}</div></div>`
-          : '';
+          ? `<div class="installer-lenders">
+              <div class="installer-lenders-heading">
+                <span>Available lenders</span>
+                <strong>${knownLenders.length}</strong>
+              </div>
+              <div class="lender-chip-list">${knownLenders.map((lender) => `<span class="lender-chip">${escapeHtml(lender.name)}</span>`).join('')}</div>
+            </div>`
+          : `<div class="installer-lenders installer-lenders-empty">
+              <div class="installer-lenders-heading"><span>Available lenders</span></div>
+              <p>Lender coverage has not been added for this installer yet.</p>
+            </div>`;
 
         return `
           <article class="installer-card${isOnHold ? ' is-on-hold' : ''}">
             <div class="installer-card-top">
               <span class="installer-mark" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18h16M6 18V9l6-4 6 4v9"></path><path d="M9 18v-5h6v5M9 9h6"></path></svg>
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18h16M6 18V9l6-4 6 4v9"></path><path d="M9 18v-5h6v5M9 9h6"></path></svg>
               </span>
-              <div>
+              <div class="installer-identity">
                 <h2>${escapeHtml(installer.name)}</h2>
                 <p>${escapeHtml(stateName)} (${escapeHtml(stateCode)})</p>
               </div>
@@ -234,33 +243,82 @@ const installerStates = US_STATES
 
   <style>
     .installers-page{max-width:1180px}
-    .installers-hero{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:30px;margin-bottom:22px;padding:30px 32px;border-radius:16px;background:#111418;color:#fff;box-shadow:0 18px 44px rgba(17,20,24,.12)}
-    .installers-hero h1{margin:7px 0 8px;color:#fff;font-size:clamp(30px,4vw,46px);letter-spacing:-.035em}
+    .installers-hero{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:32px;margin-bottom:22px;padding:32px;border:1px solid #20252a;border-radius:16px;background:#111418;color:#fff;box-shadow:0 18px 44px rgba(17,20,24,.12)}
+    .installers-hero-copy{min-width:0}
+    .installers-hero h1{margin:7px 0 8px;color:#fff;font-size:clamp(32px,4vw,46px);letter-spacing:-.035em}
     .installers-hero p{max-width:760px;margin:0;color:#d5d9dc;font-size:15px;line-height:1.65}
     .installers-hero .eyebrow{color:#b9c0c5;font-size:11px;font-weight:800;letter-spacing:.14em}
     .installers-summary{display:flex;gap:10px}
-    .installers-summary>div{min-width:120px;padding:15px 17px;border:1px solid rgba(255,255,255,.14);border-radius:10px;background:rgba(255,255,255,.045)}
-    .installers-summary strong,.installers-summary span{display:block}.installers-summary strong{font-size:22px}.installers-summary span{margin-top:2px;color:#bfc5c9;font-size:12px}
-    .installers-directory{overflow:hidden;padding:0}
-    .installer-filter-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;padding:24px;background:#fff;border-bottom:1px solid var(--line)}
-    .installer-filter-grid .field>span{font-size:13.5px;font-weight:760;color:#3f464d}
-    .installer-filter-grid select{min-height:48px;background:#fff;font-size:14.5px}
+    .installers-summary>div{min-width:128px;padding:15px 17px;border:1px solid rgba(255,255,255,.14);border-radius:10px;background:#171b1f}
+    .installers-summary strong,.installers-summary span{display:block}
+    .installers-summary strong{font-size:22px;line-height:1.1}
+    .installers-summary span{margin-top:4px;color:#bfc5c9;font-size:12px}
+
+    .installers-directory{overflow:hidden;padding:0;border:1px solid #dde2e6;border-radius:14px;background:#fff;box-shadow:0 12px 32px rgba(17,20,24,.055)}
+    .installer-filter-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;padding:24px;background:#fff;border-bottom:1px solid #e5e9ec}
+    .installer-filter-grid .field{min-width:0}
+    .installer-filter-grid .field>span{font-size:13.5px;font-weight:760;color:#343b42}
+    .installer-filter-grid select{width:100%;min-width:0;min-height:48px;background:#fff;font-size:14.5px}
     .installer-filter-grid select:disabled{background:#f7f8f9;color:#8a9299;cursor:not-allowed}
-    .installer-status{display:flex;align-items:center;gap:7px;min-height:50px;padding:13px 22px;border-bottom:1px solid var(--line);background:#fff;color:#626b73;font-size:14px;line-height:1.45}
-    .installer-status strong{color:#202428}.installer-status .status-dot{width:7px;height:7px;border-radius:50%;background:#76552f;box-shadow:0 0 0 4px rgba(118,85,47,.08)}
-    .installer-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;padding:22px;background:#fff}
-    .installer-card{padding:18px;border:1px solid #dfe3e6;border-radius:10px;background:#fff;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
-    .installer-card:hover{transform:translateY(-1px);border-color:#c9cfd4;box-shadow:0 8px 22px rgba(17,20,24,.055)}
-    .installer-card.is-on-hold{border-color:#ddcfc0;background:#fff}
-    .installer-card-top{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px}
-    .installer-mark{width:40px;height:40px;border-radius:9px;display:grid;place-items:center;background:#111418;color:#fff}
-    .installer-card h2{margin:0;color:#16191c;font-size:16px;letter-spacing:-.015em}.installer-card p{margin:3px 0 0;color:#68717a;font-size:13.5px}
-    .installer-availability{display:inline-flex;align-items:center;justify-content:center;min-height:27px;padding:5px 8px;border:1px solid #d7e1da;border-radius:6px;background:#f7faf8;color:#365b43;font-size:10.5px;font-weight:800;letter-spacing:.055em}
-    .installer-availability.hold{border-color:#e1d2c0;background:#fbf8f4;color:#805d35}
-    .installer-note{margin-top:13px;padding-top:12px;border-top:1px solid #edf0f2;color:#59626a;font-size:13.5px}
-    .installer-lenders{margin-top:14px;padding-top:13px;border-top:1px solid #edf0f2}.installer-lenders>span{display:block;margin-bottom:8px;color:#69727a;font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.055em}.installer-lenders>div{display:flex;flex-wrap:wrap;gap:6px}.installer-lenders b{display:inline-flex;align-items:center;min-height:28px;padding:5px 8px;border:1px solid #dce1e4;border-radius:6px;background:#fff;color:#30363b;font-size:11.5px;font-weight:700}
-    .installer-empty{grid-column:1/-1;padding:26px;text-align:center;color:#69727a;border:1px dashed #d6dce0;border-radius:10px}
-    @media(max-width:900px){.installers-hero{grid-template-columns:1fr;align-items:start}.installers-summary{justify-content:flex-start}.installer-filter-grid{grid-template-columns:1fr}.installer-results{grid-template-columns:1fr}}
-    @media(max-width:560px){.installers-hero{padding:23px 20px;border-radius:12px}.installers-summary{display:grid;grid-template-columns:1fr 1fr;width:100%}.installers-summary>div{min-width:0}.installer-filter-grid{padding:18px}.installer-results{padding:16px}.installer-card-top{grid-template-columns:auto minmax(0,1fr)}.installer-availability{grid-column:2;justify-self:start}.installer-status{align-items:flex-start;flex-wrap:wrap;padding:13px 16px}}
+
+    .installer-status{display:flex;align-items:center;gap:8px;min-height:52px;padding:13px 22px;border-bottom:1px solid #e5e9ec;background:#fff;color:#626b73;font-size:14px;line-height:1.45}
+    .installer-status strong{color:#202428}
+    .installer-status .status-dot{flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:#76552f;box-shadow:0 0 0 4px rgba(118,85,47,.08)}
+
+    .installer-results{display:grid;grid-template-columns:1fr;gap:16px;padding:22px;background:#fff}
+    .installer-card{box-sizing:border-box;width:100%;min-width:0;padding:22px;border:1px solid #dfe4e8;border-radius:13px;background:#fff;box-shadow:0 5px 18px rgba(17,20,24,.035);overflow:hidden;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+    .installer-card:hover{transform:translateY(-1px);border-color:#c7ced4;box-shadow:0 10px 26px rgba(17,20,24,.06)}
+    .installer-card.is-on-hold{border-color:#d9c6ae}
+    .installer-card-top{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:14px;min-width:0}
+    .installer-mark{flex:0 0 auto;width:44px;height:44px;border-radius:10px;display:grid;place-items:center;background:#111418;color:#fff;box-shadow:0 5px 14px rgba(17,20,24,.12)}
+    .installer-identity{min-width:0}
+    .installer-card h2{margin:0;color:#14181b;font-size:20px;line-height:1.2;letter-spacing:-.02em;overflow-wrap:anywhere}
+    .installer-card p{margin:5px 0 0;color:#68717a;font-size:13.5px;line-height:1.45}
+    .installer-availability{display:inline-flex;align-items:center;justify-content:center;min-height:29px;padding:6px 9px;border:1px solid #cfe0d4;border-radius:7px;background:#f7faf8;color:#31563f;font-size:10.5px;font-weight:800;letter-spacing:.06em;white-space:nowrap}
+    .installer-availability.hold{border-color:#ddcdb9;background:#fbf8f4;color:#795932}
+    .installer-note{margin-top:16px;padding:13px 14px;border:1px solid #e6e9ec;border-radius:8px;background:#fafbfb;color:#525c64;font-size:13.5px;line-height:1.5}
+
+    .installer-lenders{margin-top:18px;padding-top:16px;border-top:1px solid #e9edf0;min-width:0}
+    .installer-lenders-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:11px}
+    .installer-lenders-heading>span{color:#59626a;font-size:12px;font-weight:800;letter-spacing:.045em;text-transform:uppercase}
+    .installer-lenders-heading>strong{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:24px;padding:0 7px;border-radius:6px;background:#111418;color:#fff;font-size:11px;line-height:1}
+    .lender-chip-list{display:flex;flex-wrap:wrap;gap:8px;min-width:0}
+    .lender-chip{display:inline-flex;align-items:center;max-width:100%;min-height:32px;padding:6px 10px;border:1px solid #d9dfe4;border-radius:8px;background:#fff;color:#252b30;font-size:12.5px;font-weight:700;line-height:1.2;overflow-wrap:anywhere}
+    .lender-chip:hover{border-color:#aeb7bf;background:#fafbfc}
+    .installer-lenders-empty p{margin:0;color:#7a838a;font-size:13px}
+    .installer-empty{padding:30px;text-align:center;color:#69727a;border:1px dashed #d6dce0;border-radius:10px;background:#fff}
+
+    @media(max-width:900px){
+      .installers-hero{grid-template-columns:1fr;align-items:start;padding:28px}
+      .installers-summary{justify-content:flex-start}
+      .installer-filter-grid{grid-template-columns:1fr}
+    }
+
+    @media(max-width:620px){
+      .installers-page{padding-left:14px;padding-right:14px}
+      .installers-hero{padding:22px 19px;border-radius:12px;gap:20px}
+      .installers-hero p{font-size:14px}
+      .installers-summary{display:grid;grid-template-columns:1fr 1fr;width:100%;gap:8px}
+      .installers-summary>div{min-width:0;padding:13px 14px}
+      .installer-filter-grid{padding:16px;gap:14px}
+      .installer-filter-grid select{min-height:46px;font-size:14px}
+      .installer-status{align-items:flex-start;flex-wrap:wrap;padding:13px 16px;font-size:13.5px}
+      .installer-results{padding:14px;gap:12px}
+      .installer-card{padding:17px;border-radius:11px}
+      .installer-card-top{grid-template-columns:auto minmax(0,1fr);align-items:start;gap:12px}
+      .installer-mark{width:40px;height:40px;border-radius:9px}
+      .installer-card h2{font-size:17px}
+      .installer-availability{grid-column:2;justify-self:start;margin-top:3px}
+      .installer-lenders{margin-top:15px;padding-top:14px}
+      .lender-chip-list{gap:6px}
+      .lender-chip{min-height:30px;padding:6px 9px;font-size:12px}
+    }
+
+    @media(max-width:390px){
+      .installers-summary{grid-template-columns:1fr}
+      .installer-card-top{grid-template-columns:1fr}
+      .installer-mark{margin-bottom:2px}
+      .installer-availability{grid-column:1;justify-self:start}
+    }
   </style>
 </BaseLayout>
