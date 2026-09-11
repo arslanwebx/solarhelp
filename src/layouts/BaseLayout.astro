@@ -1,0 +1,33 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#ffffff" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="nav-shell">
+        <a class="brand" href="/" aria-label="SolarHelp home">SolarHelp</a>
+        <nav class="site-nav" aria-label="Main navigation">
+          <a class:list={['nav-link', path === '/redlines' && 'active']} href="/redlines">Redlines</a>
+          <a class:list={['nav-link', path === '/warehouses-owe' && 'active']} href="/warehouses-owe">OWE Warehouses</a>
+        </nav>
+      </div>
+    </header>
+    <slot />
+  </body>
+</html>

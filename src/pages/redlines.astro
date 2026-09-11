@@ -1,0 +1,135 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { US_STATES, STATE_NAME_BY_CODE } from '../data/states';
+import { REDLINE_COVERAGE } from '../data/redlines';
+
+const stateNamesJson = JSON.stringify(STATE_NAME_BY_CODE);
+const coverageJson = JSON.stringify(REDLINE_COVERAGE);
+---
+<BaseLayout title="Installer Redlines - SolarHelp" description="Solar installer redlines by confirmed state coverage.">
+  <main class="page-shell narrow">
+    <div class="page-heading">
+      <h1>Installer Redlines</h1>
+      <p>Select a state to see the installers that work there, or select an installer to see every state it covers with the applicable redline.</p>
+    </div>
+
+    <section class="panel directory-panel">
+      <div class="filter-row">
+        <label class="field" for="state-select">
+          <span>State</span>
+          <select id="state-select" aria-describedby="redline-status">
+            <option value="">Select a state...</option>
+            {US_STATES.map((state) => <option value={state.code}>{state.name} ({state.code})</option>)}
+          </select>
+        </label>
+
+        <label class="field" for="installer-select">
+          <span>Installer</span>
+          <select id="installer-select" aria-describedby="redline-status">
+            <option value="">Select an installer...</option>
+            {REDLINE_COVERAGE.map((installer) => <option value={installer.name}>{installer.name}</option>)}
+          </select>
+        </label>
+      </div>
+
+      <div id="redline-status" class="directory-status" aria-live="polite">Select a state or installer to view redlines.</div>
+
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>State</th>
+              <th>Installer</th>
+              <th>Redline</th>
+              <th>Coverage / note</th>
+            </tr>
+          </thead>
+          <tbody id="redline-table-body">
+            <tr><td class="empty-row" colspan="4">Choose a state or installer above.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script id="state-name-data" type="application/json" is:inline set:html={stateNamesJson}></script>
+  <script id="coverage-data" type="application/json" is:inline set:html={coverageJson}></script>
+  <script>
+    const stateSelect = document.getElementById('state-select');
+    const installerSelect = document.getElementById('installer-select');
+    const status = document.getElementById('redline-status');
+    const tableBody = document.getElementById('redline-table-body');
+    const stateNames = JSON.parse(document.getElementById('state-name-data').textContent || '{}');
+    const coverage = JSON.parse(document.getElementById('coverage-data').textContent || '[]');
+
+    const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[char]));
+
+    const stateLabel = (code) => `${stateNames[code] || code} (${code})`;
+
+    function rowFor(installer, stateCode) {
+      const redline = Object.prototype.hasOwnProperty.call(installer.rates, stateCode) ? installer.rates[stateCode] : null;
+      const noteParts = [];
+      if (installer.notes?.[stateCode]) noteParts.push(installer.notes[stateCode]);
+      if (redline === null) noteParts.push('Coverage confirmed; redline not provided in the current rate sheet.');
+      return { stateCode, installer:installer.name, redline, notes:noteParts.join(' ') };
+    }
+
+    function renderRows(rows, highlightLowest = false, emptyMessage = 'No matching redline records found.') {
+      tableBody.innerHTML = '';
+      if (!rows.length) {
+        tableBody.innerHTML = `<tr><td class="empty-row" colspan="4">${escapeHtml(emptyMessage)}</td></tr>`;
+        return;
+      }
+
+      const numeric = rows.filter((row) => typeof row.redline === 'number').map((row) => row.redline);
+      const lowest = highlightLowest && numeric.length ? Math.min(...numeric) : null;
+      const fragment = document.createDocumentFragment();
+
+      rows.forEach((row) => {
+        const tr = document.createElement('tr');
+        const isLowest = lowest !== null && row.redline === lowest;
+        const redlineText = row.redline === null ? 'N/A' : `$${Number(row.redline).toFixed(2)} / W`;
+        tr.innerHTML = `
+          <td><strong>${escapeHtml(stateLabel(row.stateCode))}</strong></td>
+          <td><strong>${escapeHtml(row.installer)}</strong></td>
+          <td><span class="rate ${isLowest ? 'lowest' : ''} ${row.redline === null ? 'na' : ''}">${redlineText}</span></td>
+          <td><span class="source-scope">Confirmed state coverage</span>${row.notes ? `<span class="row-note">${escapeHtml(row.notes)}</span>` : ''}</td>
+        `;
+        fragment.appendChild(tr);
+      });
+      tableBody.appendChild(fragment);
+    }
+
+    function showEmpty() {
+      status.textContent = 'Select a state or installer to view redlines.';
+      tableBody.innerHTML = '<tr><td class="empty-row" colspan="4">Choose a state or installer above.</td></tr>';
+    }
+
+    function renderState(code) {
+      if (!code) return showEmpty();
+      const rows = coverage.filter((installer) => installer.states.includes(code)).map((installer) => rowFor(installer, code));
+      status.textContent = `${stateLabel(code)}: ${rows.length} confirmed installer${rows.length === 1 ? '' : 's'}.`;
+      renderRows(rows, true, `No confirmed installers are listed for ${stateLabel(code)}.`);
+    }
+
+    function renderInstaller(name) {
+      if (!name) return showEmpty();
+      const installer = coverage.find((item) => item.name === name);
+      if (!installer) return showEmpty();
+      const rows = installer.states.map((code) => rowFor(installer, code)).sort((a,b) => (stateNames[a.stateCode] || a.stateCode).localeCompare(stateNames[b.stateCode] || b.stateCode));
+      status.textContent = `${name}: ${rows.length} confirmed state${rows.length === 1 ? '' : 's'}.`;
+      renderRows(rows, false, `No confirmed states are listed for ${name}.`);
+    }
+
+    stateSelect.addEventListener('change', () => {
+      if (stateSelect.value) installerSelect.value = '';
+      renderState(stateSelect.value);
+    });
+    installerSelect.addEventListener('change', () => {
+      if (installerSelect.value) stateSelect.value = '';
+      renderInstaller(installerSelect.value);
+    });
+  </script>
+</BaseLayout>

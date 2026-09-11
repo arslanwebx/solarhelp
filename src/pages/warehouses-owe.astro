@@ -1,0 +1,98 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { US_STATES, STATE_NAME_BY_CODE } from '../data/states';
+import { WAREHOUSE_BRANCHES } from '../data/warehouses';
+
+const statesJson = JSON.stringify(STATE_NAME_BY_CODE);
+const branchesJson = JSON.stringify(WAREHOUSE_BRANCHES);
+---
+<BaseLayout title="OWE Warehouses - SolarHelp" description="Our World Energy branch and warehouse locations by state.">
+  <main class="page-shell">
+    <div class="page-heading">
+      <h1>OWE Branch Locations</h1>
+      <p>Filter the branch list by state. Every address opens the listed address in Google Maps.</p>
+    </div>
+
+    <section class="panel directory-panel">
+      <div class="filter-row single-filter">
+        <label class="field" for="branch-state-select">
+          <span>State</span>
+          <select id="branch-state-select" aria-describedby="branch-status">
+            <option value="ALL">All states / territories</option>
+            {US_STATES.map((state) => <option value={state.code}>{state.name} ({state.code})</option>)}
+          </select>
+        </label>
+      </div>
+
+      <div id="branch-status" class="directory-status" aria-live="polite"></div>
+
+      <div class="table-scroll">
+        <table class="data-table branch-table">
+          <thead>
+            <tr>
+              <th>Branch</th>
+              <th>Address</th>
+              <th>Coverage radius</th>
+              <th>Max travel</th>
+              <th>Team type</th>
+            </tr>
+          </thead>
+          <tbody id="branch-table-body"></tbody>
+        </table>
+      </div>
+
+      <div class="source-note">
+        <strong>Source notes:</strong> The source lists the Wallingford branch with a Hudson, Massachusetts address and groups the Mansfield, MA location under Rhode Island coverage. Connecticut and Vermont are listed as active coverage states in the source, but no branch address rows are shown for them.
+      </div>
+    </section>
+  </main>
+
+  <script id="warehouse-state-data" type="application/json" is:inline set:html={statesJson}></script>
+  <script id="warehouse-branch-data" type="application/json" is:inline set:html={branchesJson}></script>
+  <script>
+    const stateSelect = document.getElementById('branch-state-select');
+    const status = document.getElementById('branch-status');
+    const tableBody = document.getElementById('branch-table-body');
+    const stateNames = JSON.parse(document.getElementById('warehouse-state-data').textContent || '{}');
+    const branches = JSON.parse(document.getElementById('warehouse-branch-data').textContent || '[]');
+
+    const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[char]));
+
+    function mapsUrl(address) {
+      const cleaned = String(address).replace(/\s*\(ZIP not listed\)\s*/i, '').replace(/,\s*USA\s*$/i, '');
+      return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cleaned)}`;
+    }
+
+    function render() {
+      const code = stateSelect.value;
+      const rows = code === 'ALL' ? branches : branches.filter((branch) => branch.stateCode === code);
+      const label = code === 'ALL' ? 'All locations' : (stateNames[code] || code);
+      status.textContent = `${label}: ${rows.length} branch${rows.length === 1 ? '' : 'es'} listed in the source.`;
+      tableBody.innerHTML = '';
+
+      if (!rows.length) {
+        tableBody.innerHTML = `<tr><td class="empty-row" colspan="5">No OWE branch address is listed for ${escapeHtml(label)} in the source.</td></tr>`;
+        return;
+      }
+
+      const fragment = document.createDocumentFragment();
+      rows.forEach((branch) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${escapeHtml(branch.branch)}</strong></td>
+          <td><a class="address-link" href="${mapsUrl(branch.address)}" target="_blank" rel="noopener noreferrer">${escapeHtml(branch.address)}</a></td>
+          <td>${escapeHtml(branch.coverageRadius)}</td>
+          <td>${escapeHtml(branch.maxTravel)}</td>
+          <td>${escapeHtml(branch.teamType)}</td>
+        `;
+        fragment.appendChild(tr);
+      });
+      tableBody.appendChild(fragment);
+    }
+
+    stateSelect.addEventListener('change', render);
+    render();
+  </script>
+</BaseLayout>

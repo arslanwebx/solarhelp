@@ -1,0 +1,291 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="SolarHelp - Solar PPW Calculators" description="Fast solar PPW calculators for proposal pricing and quick price-per-watt checks.">
+  <main class="page-shell">
+    <div class="page-heading">
+      <h1>Solar Pricing Tools</h1>
+      <p>Two fast calculators for proposal pricing and quick PPW checks.</p>
+    </div>
+
+    <section class="tool-layout" aria-label="Solar pricing tools">
+      <article class="panel">
+        <div class="panel-heading">
+          <h2>Proposal PPW Calculator</h2>
+          <p>The breakdown updates instantly as you type.</p>
+        </div>
+
+        <form id="proposal-form" class="form-stack" novalidate>
+          <div class="field-grid">
+            <label class="field field-wide" for="customerName">
+              <span>Customer name</span>
+              <input id="customerName" type="text" autocomplete="name" placeholder="Amanda Taylor" />
+            </label>
+
+            <label class="field field-wide" for="lenderProgram">
+              <span>Lender program</span>
+              <input id="lenderProgram" list="lender-options" type="text" placeholder="LightReach 25 year 2.99%" />
+              <datalist id="lender-options">
+                <option value="LightReach 25 year 2.99%"></option>
+                <option value="EnFin Lease 25 yr 2.99%"></option>
+                <option value="GoodLeap TPO 2.99%"></option>
+                <option value="SunRun 15 yr 2.99%"></option>
+                <option value="Credit Human 20 yr 8.99%"></option>
+                <option value="Concert 25 year 10.99%"></option>
+                <option value="Climate First 30.5 yr"></option>
+              </datalist>
+            </label>
+
+            <label class="field" for="systemSize">
+              <span>System size (kW)</span>
+              <input id="systemSize" type="number" inputmode="decimal" min="0" step="0.01" placeholder="9.43" />
+            </label>
+
+            <label class="field" for="basePpw">
+              <span>Base PPW ($/W)</span>
+              <input id="basePpw" type="number" inputmode="decimal" min="0" step="0.01" placeholder="2.70" />
+            </label>
+
+            <label class="field" for="grossPpw">
+              <span>Gross PPW ($/W)</span>
+              <input id="grossPpw" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Optional" />
+            </label>
+
+            <label class="field" for="monthlyPayment">
+              <span>Monthly payment ($)</span>
+              <input id="monthlyPayment" type="number" inputmode="decimal" min="0" step="0.01" placeholder="213.42" />
+            </label>
+
+            <label class="field" for="customAdderName">
+              <span>Adder name</span>
+              <input id="customAdderName" type="text" placeholder="Trip charge" />
+            </label>
+
+            <label class="field" for="customAdder">
+              <span>Adder amount ($)</span>
+              <input id="customAdder" type="number" inputmode="decimal" min="0" step="0.01" placeholder="850" />
+            </label>
+
+            <label class="field" for="batteryName">
+              <span>Battery name</span>
+              <input id="batteryName" type="text" value="Tesla Battery" />
+            </label>
+
+            <label class="field" for="batteryAmount">
+              <span>Battery amount ($)</span>
+              <input id="batteryAmount" type="number" inputmode="decimal" min="0" step="0.01" placeholder="12500" />
+            </label>
+          </div>
+
+          <p id="validation" class="form-message" role="alert" aria-live="polite"></p>
+          <div class="button-row">
+            <button class="button button-secondary" type="reset">Reset</button>
+          </div>
+        </form>
+
+        <div class="result-box" aria-live="polite">
+          <div class="result-box-heading">
+            <h3>Proposal breakdown</h3>
+            <button id="copyButton" class="text-button" type="button" disabled>Copy</button>
+          </div>
+          <div id="breakdown" class="proposal-preview muted">Start entering proposal details.</div>
+          <p id="copyStatus" class="copy-status" aria-live="polite"></p>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-heading">
+          <h2>Quick PPW Calculator</h2>
+          <p>Divide the loan amount by system wattage.</p>
+        </div>
+
+        <form id="quick-form" class="form-stack" novalidate>
+          <label class="field" for="quickLoanAmount">
+            <span>Loan amount ($)</span>
+            <input id="quickLoanAmount" type="number" inputmode="decimal" min="0" step="0.01" placeholder="35000" />
+          </label>
+          <div class="field-grid">
+            <label class="field" for="quickSystemSize">
+              <span>System size</span>
+              <input id="quickSystemSize" type="number" inputmode="decimal" min="0" step="0.01" placeholder="10.2" />
+            </label>
+            <label class="field" for="quickSystemUnit">
+              <span>Unit</span>
+              <select id="quickSystemUnit">
+                <option value="kw">kW</option>
+                <option value="w">Watts</option>
+              </select>
+            </label>
+          </div>
+          <div class="button-row">
+            <button id="quickReset" class="button button-secondary" type="button">Clear</button>
+          </div>
+        </form>
+
+        <div class="quick-result" aria-live="polite">
+          <span class="muted">Calculated PPW</span>
+          <strong id="quickResult">-</strong>
+          <p id="quickMessage">Add the loan amount and system size.</p>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const numberValue = (input) => !input || input.value.trim() === '' ? null : Number(input.value);
+    const valid = (value) => Number.isFinite(value) && value >= 0;
+    const money = (value) => new Intl.NumberFormat('en-US', { style:'currency', currency:'USD', minimumFractionDigits:2, maximumFractionDigits:2 }).format(value);
+    const compact = (value) => String(Number(value));
+    const simpleDollar = (value) => {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return '$0';
+      return `$${Number.isInteger(n) ? n : n.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')}`;
+    };
+
+    const form = $('proposal-form');
+    const fields = {
+      customerName:$('customerName'), lenderProgram:$('lenderProgram'), systemSize:$('systemSize'),
+      basePpw:$('basePpw'), grossPpw:$('grossPpw'), monthlyPayment:$('monthlyPayment'),
+      customAdderName:$('customAdderName'), customAdder:$('customAdder'), batteryName:$('batteryName'), batteryAmount:$('batteryAmount')
+    };
+    const breakdown = $('breakdown');
+    const validation = $('validation');
+    const copyButton = $('copyButton');
+    const copyStatus = $('copyStatus');
+    let activePpw = null;
+    let copyText = '';
+
+    function renderProposal() {
+      const customer = fields.customerName.value.trim();
+      const lender = fields.lenderProgram.value.trim();
+      const size = numberValue(fields.systemSize);
+      const base = numberValue(fields.basePpw);
+      const gross = numberValue(fields.grossPpw);
+      const payment = numberValue(fields.monthlyPayment);
+      const custom = numberValue(fields.customAdder) ?? 0;
+      const battery = numberValue(fields.batteryAmount) ?? 0;
+      const customName = fields.customAdderName.value.trim();
+      const batteryName = fields.batteryName.value.trim() || 'Battery';
+
+      validation.textContent = '';
+      copyStatus.textContent = '';
+
+      if ([size,base,gross,payment,custom,battery].some((value) => value !== null && !valid(value))) {
+        validation.textContent = 'Use zero or a positive number in each amount field.';
+        return;
+      }
+
+      const hasSize = size !== null && size > 0;
+      const hasBase = base !== null;
+      const hasGross = gross !== null;
+      const useGross = activePpw === 'gross' || (hasGross && !hasBase);
+      const displayPpw = useGross ? gross : (hasBase ? base : gross);
+      const adders = custom + battery;
+      let contractTotal = null;
+
+      if (hasSize && displayPpw !== null) {
+        const watts = size * 1000;
+        if (useGross) {
+          const derivedBase = gross - (adders / watts);
+          if (!valid(derivedBase)) validation.textContent = 'Adders are greater than the Gross PPW.';
+          else contractTotal = gross * watts;
+        } else {
+          contractTotal = (base * watts) + adders;
+        }
+      }
+
+      const top = [];
+      if (customer) top.push(customer.toUpperCase());
+      if (hasSize) top.push(`${compact(size)} kW`);
+      if (displayPpw !== null) top.push(`${compact(displayPpw)} PPW`);
+
+      const finance = [];
+      if (lender) finance.push(lender);
+      if (contractTotal !== null) finance.push(money(contractTotal));
+      if (payment !== null) finance.push(money(payment));
+
+      const adderLines = [];
+      if (custom > 0) adderLines.push(`${customName || 'Custom adder'} ${simpleDollar(custom)}`);
+      if (battery > 0) adderLines.push(`${batteryName} ${simpleDollar(battery)}`);
+
+      const groups = [];
+      if (top.length) groups.push(top.join('\n'));
+      if (finance.length) groups.push(finance.join('\n'));
+      if (adderLines.length) groups.push(`Adders:\n${adderLines.join('\n')}`);
+      copyText = groups.join('\n\n');
+
+      if (!copyText) {
+        breakdown.textContent = 'Start entering proposal details.';
+        breakdown.classList.add('muted');
+        copyButton.disabled = true;
+        return;
+      }
+
+      breakdown.textContent = copyText;
+      breakdown.classList.remove('muted');
+      copyButton.disabled = false;
+    }
+
+    fields.basePpw.addEventListener('input', () => { activePpw = 'base'; renderProposal(); });
+    fields.grossPpw.addEventListener('input', () => { activePpw = 'gross'; renderProposal(); });
+    Object.entries(fields).forEach(([key, input]) => {
+      if (key === 'basePpw' || key === 'grossPpw') return;
+      input.addEventListener('input', renderProposal);
+      input.addEventListener('change', renderProposal);
+    });
+
+    form.addEventListener('reset', () => setTimeout(() => {
+      activePpw = null;
+      validation.textContent = '';
+      copyStatus.textContent = '';
+      copyText = '';
+      breakdown.textContent = 'Start entering proposal details.';
+      breakdown.classList.add('muted');
+      copyButton.disabled = true;
+    }, 0));
+
+    copyButton.addEventListener('click', async () => {
+      if (!copyText) return;
+      try {
+        await navigator.clipboard.writeText(copyText);
+        copyStatus.textContent = 'Copied.';
+      } catch {
+        copyStatus.textContent = 'Copy failed. Select the breakdown and copy it manually.';
+      }
+    });
+
+    const quickLoan = $('quickLoanAmount');
+    const quickSize = $('quickSystemSize');
+    const quickUnit = $('quickSystemUnit');
+    const quickResult = $('quickResult');
+    const quickMessage = $('quickMessage');
+
+    function renderQuick() {
+      const loan = numberValue(quickLoan);
+      const size = numberValue(quickSize);
+      if (loan === null || size === null) {
+        quickResult.textContent = '-';
+        quickMessage.textContent = 'Add the loan amount and system size.';
+        return;
+      }
+      if (!valid(loan) || !valid(size) || size <= 0) {
+        quickResult.textContent = '-';
+        quickMessage.textContent = 'Use a positive system size and a zero or positive loan amount.';
+        return;
+      }
+      const watts = quickUnit.value === 'kw' ? size * 1000 : size;
+      quickResult.textContent = `$${(loan / watts).toFixed(2)} / W`;
+      quickMessage.textContent = `${money(loan)} / ${new Intl.NumberFormat('en-US').format(watts)} watts`;
+    }
+
+    quickLoan.addEventListener('input', renderQuick);
+    quickSize.addEventListener('input', renderQuick);
+    quickUnit.addEventListener('change', renderQuick);
+    $('quickReset').addEventListener('click', () => {
+      $('quick-form').reset();
+      renderQuick();
+      quickLoan.focus();
+    });
+  </script>
+</BaseLayout>
