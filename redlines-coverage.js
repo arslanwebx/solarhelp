@@ -104,28 +104,39 @@
     }
   ];
 
+  function buildInstallerRow(installer, code) {
+    const redline = Object.prototype.hasOwnProperty.call(installer.rates, code)
+      ? installer.rates[code]
+      : null;
+    const explicitNote = installer.notes && installer.notes[code] ? installer.notes[code] : '';
+    const missingRateNote = redline === null ? 'Coverage confirmed; redline not provided in the current rate sheet.' : '';
+    const notes = [explicitNote, missingRateNote].filter(Boolean).join(' ');
+
+    return {
+      installer: installer.name,
+      stateCode: code,
+      redline,
+      formattedRedline: redline === null ? 'N/A' : `$${redline.toFixed(2)}`,
+      isAvailable: redline !== null,
+      coverageType: 'Confirmed state coverage',
+      sourceScope: 'Confirmed state coverage',
+      notes
+    };
+  }
+
   getInstallersForState = function (stateCode) {
     const code = String(stateCode || '').trim().toUpperCase();
+    if (!code) return [];
 
     return COVERAGE
       .filter((installer) => installer.states.includes(code))
-      .map((installer) => {
-        const redline = Object.prototype.hasOwnProperty.call(installer.rates, code)
-          ? installer.rates[code]
-          : null;
-        const explicitNote = installer.notes && installer.notes[code] ? installer.notes[code] : '';
-        const missingRateNote = redline === null ? 'Coverage confirmed; redline not provided in the current rate sheet.' : '';
-        const notes = [explicitNote, missingRateNote].filter(Boolean).join(' ');
+      .map((installer) => buildInstallerRow(installer, code));
+  };
 
-        return {
-          installer: installer.name,
-          redline,
-          formattedRedline: redline === null ? 'N/A' : `$${redline.toFixed(2)}`,
-          isAvailable: redline !== null,
-          coverageType: 'Confirmed state coverage',
-          sourceScope: 'Confirmed state coverage',
-          notes
-        };
-      });
+  window.SOLARHELP_INSTALLER_COVERAGE = COVERAGE;
+  window.getCoverageForInstaller = function (installerName) {
+    const installer = COVERAGE.find((item) => item.name === installerName);
+    if (!installer) return [];
+    return installer.states.map((code) => buildInstallerRow(installer, code));
   };
 })();
