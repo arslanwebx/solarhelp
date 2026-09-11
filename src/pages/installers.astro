@@ -10,7 +10,7 @@ const installerStates = US_STATES
   .filter((state) => INSTALLERS.some((installer) => installer.states.includes(state.code)))
   .sort((a, b) => a.name.localeCompare(b.name));
 ---
-<BaseLayout title="Installers - SolarHelp" description="Find solar installers available by state and filter installer and lender options by coverage.">
+<BaseLayout title="Installers - SolarHelp" description="Find solar installers and available lender coverage by state.">
   <main class="page-shell installers-page">
     <section class="installers-hero" aria-labelledby="installers-title">
       <div>
@@ -44,7 +44,7 @@ const installerStates = US_STATES
         <label class="field premium-select" for="lender-select">
           <span>Lender</span>
           <select id="lender-select" disabled>
-            <option value="" selected>Lender data not added yet</option>
+            <option value="" selected>Select a state first</option>
           </select>
         </label>
       </div>
@@ -79,9 +79,23 @@ const installerStates = US_STATES
       return installer?.stateNotes?.[stateCode] || '';
     }
 
+    function installersForState(stateCode) {
+      return installers.filter((installer) => installer.states.includes(stateCode));
+    }
+
+    function lendersForSelection(stateCode, installerName = '') {
+      const stateInstallerNames = installersForState(stateCode).map((installer) => installer.name);
+      return lenders.filter((lender) => {
+        if (!Array.isArray(lender.states) || !lender.states.includes(stateCode)) return false;
+        if (!Array.isArray(lender.installers)) return false;
+        if (installerName) return lender.installers.includes(installerName);
+        return lender.installers.some((name) => stateInstallerNames.includes(name));
+      });
+    }
+
     function setInstallerOptions(stateCode) {
       if (!installerSelect) return [];
-      const available = installers.filter((installer) => installer.states.includes(stateCode));
+      const available = installersForState(stateCode);
       installerSelect.innerHTML = '';
 
       const allOption = document.createElement('option');
@@ -101,15 +115,15 @@ const installerStates = US_STATES
       return available;
     }
 
-    function setLenderOptions(stateCode) {
+    function setLenderOptions(stateCode, installerName = '') {
       if (!lenderSelect) return [];
-      const available = lenders.filter((lender) => Array.isArray(lender.states) && lender.states.includes(stateCode));
+      const available = lendersForSelection(stateCode, installerName);
       lenderSelect.innerHTML = '';
 
       if (!available.length) {
         const option = document.createElement('option');
         option.value = '';
-        option.textContent = 'Lender data not added yet';
+        option.textContent = installerName ? 'Lender data not added for this installer' : 'No lender data added for this state';
         lenderSelect.appendChild(option);
         lenderSelect.disabled = true;
         return available;
@@ -138,7 +152,7 @@ const installerStates = US_STATES
       if (!stateCode) {
         installerSelect.innerHTML = '<option value="">Select a state first</option>';
         installerSelect.disabled = true;
-        lenderSelect.innerHTML = '<option value="">Lender data not added yet</option>';
+        lenderSelect.innerHTML = '<option value="">Select a state first</option>';
         lenderSelect.disabled = true;
         status.innerHTML = '<span class="status-dot" aria-hidden="true"></span><strong>Select a state / territory</strong><span>Available installers will appear below.</span>';
         results.innerHTML = '';
@@ -147,11 +161,20 @@ const installerStates = US_STATES
       }
 
       const stateName = stateNames[stateCode] || stateCode;
-      const stateInstallers = installers.filter((installer) => installer.states.includes(stateCode));
+      const stateInstallers = installersForState(stateCode);
       const selectedInstaller = installerSelect.value;
-      const visibleInstallers = selectedInstaller
+      const selectedLender = lenderSelect.value;
+
+      let visibleInstallers = selectedInstaller
         ? stateInstallers.filter((installer) => installer.name === selectedInstaller)
         : stateInstallers;
+
+      if (selectedLender) {
+        const lender = lenders.find((item) => item.name === selectedLender && item.states?.includes(stateCode));
+        if (lender?.installers) {
+          visibleInstallers = visibleInstallers.filter((installer) => lender.installers.includes(installer.name));
+        }
+      }
 
       status.innerHTML = `<span class="status-dot" aria-hidden="true"></span><strong>${escapeHtml(stateName)} (${escapeHtml(stateCode)})</strong><span>${stateInstallers.length} installer${stateInstallers.length === 1 ? '' : 's'} available</span>`;
       results.hidden = false;
@@ -164,6 +187,11 @@ const installerStates = US_STATES
       results.innerHTML = visibleInstallers.map((installer) => {
         const note = installerNote(installer, stateCode);
         const isOnHold = note.toUpperCase() === 'ON HOLD';
+        const knownLenders = lendersForSelection(stateCode, installer.name);
+        const lenderMarkup = knownLenders.length
+          ? `<div class="installer-lenders"><span>Available lenders</span><div>${knownLenders.map((lender) => `<b>${escapeHtml(lender.name)}</b>`).join('')}</div></div>`
+          : '';
+
         return `
           <article class="installer-card${isOnHold ? ' is-on-hold' : ''}">
             <div class="installer-card-top">
@@ -177,6 +205,7 @@ const installerStates = US_STATES
               <span class="installer-availability${isOnHold ? ' hold' : ''}">${isOnHold ? 'ON HOLD' : 'AVAILABLE'}</span>
             </div>
             ${note && !isOnHold ? `<div class="installer-note">${escapeHtml(note)}</div>` : ''}
+            ${lenderMarkup}
           </article>
         `;
       }).join('');
@@ -193,7 +222,12 @@ const installerStates = US_STATES
       render();
     });
 
-    installerSelect?.addEventListener('change', render);
+    installerSelect?.addEventListener('change', () => {
+      const stateCode = stateSelect?.value || '';
+      if (stateCode) setLenderOptions(stateCode, installerSelect.value);
+      render();
+    });
+
     lenderSelect?.addEventListener('change', render);
     render();
   </script>
@@ -224,6 +258,7 @@ const installerStates = US_STATES
     .installer-availability{display:inline-flex;align-items:center;justify-content:center;min-height:27px;padding:5px 8px;border:1px solid #d7e1da;border-radius:6px;background:#f7faf8;color:#365b43;font-size:10.5px;font-weight:800;letter-spacing:.055em}
     .installer-availability.hold{border-color:#e1d2c0;background:#fbf8f4;color:#805d35}
     .installer-note{margin-top:13px;padding-top:12px;border-top:1px solid #edf0f2;color:#59626a;font-size:13.5px}
+    .installer-lenders{margin-top:14px;padding-top:13px;border-top:1px solid #edf0f2}.installer-lenders>span{display:block;margin-bottom:8px;color:#69727a;font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.055em}.installer-lenders>div{display:flex;flex-wrap:wrap;gap:6px}.installer-lenders b{display:inline-flex;align-items:center;min-height:28px;padding:5px 8px;border:1px solid #dce1e4;border-radius:6px;background:#fff;color:#30363b;font-size:11.5px;font-weight:700}
     .installer-empty{grid-column:1/-1;padding:26px;text-align:center;color:#69727a;border:1px dashed #d6dce0;border-radius:10px}
     @media(max-width:900px){.installers-hero{grid-template-columns:1fr;align-items:start}.installers-summary{justify-content:flex-start}.installer-filter-grid{grid-template-columns:1fr}.installer-results{grid-template-columns:1fr}}
     @media(max-width:560px){.installers-hero{padding:23px 20px;border-radius:12px}.installers-summary{display:grid;grid-template-columns:1fr 1fr;width:100%}.installers-summary>div{min-width:0}.installer-filter-grid{padding:18px}.installer-results{padding:16px}.installer-card-top{grid-template-columns:auto minmax(0,1fr)}.installer-availability{grid-column:2;justify-self:start}.installer-status{align-items:flex-start;flex-wrap:wrap;padding:13px 16px}}
