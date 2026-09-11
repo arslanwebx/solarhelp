@@ -58,7 +58,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
             <label class="field" for="customAdderName">
               <span>Adder name</span>
-              <input id="customAdderName" type="text" placeholder="Trip charge" />
+              <input id="customAdderName" type="text" value="Custom Adder" />
             </label>
 
             <label class="field" for="customAdder">
@@ -137,6 +137,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     const valid = (value) => Number.isFinite(value) && value >= 0;
     const money = (value) => new Intl.NumberFormat('en-US', { style:'currency', currency:'USD', minimumFractionDigits:2, maximumFractionDigits:2 }).format(value);
     const compact = (value) => String(Number(value));
+    const ppw = (value) => Number(value).toFixed(3).replace(/0+$/, '').replace(/\.$/, '');
     const simpleDollar = (value) => {
       const n = Number(value);
       if (!Number.isFinite(n)) return '$0';
@@ -165,7 +166,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       const payment = numberValue(fields.monthlyPayment);
       const custom = numberValue(fields.customAdder) ?? 0;
       const battery = numberValue(fields.batteryAmount) ?? 0;
-      const customName = fields.customAdderName.value.trim();
+      const customName = fields.customAdderName.value.trim() || 'Custom Adder';
       const batteryName = fields.batteryName.value.trim() || 'Battery';
 
       validation.textContent = '';
@@ -183,13 +184,18 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       const displayPpw = useGross ? gross : (hasBase ? base : gross);
       const adders = custom + battery;
       let contractTotal = null;
+      let derivedBase = null;
 
       if (hasSize && displayPpw !== null) {
         const watts = size * 1000;
         if (useGross) {
-          const derivedBase = gross - (adders / watts);
-          if (!valid(derivedBase)) validation.textContent = 'Adders are greater than the Gross PPW.';
-          else contractTotal = gross * watts;
+          derivedBase = gross - (adders / watts);
+          if (!valid(derivedBase)) {
+            validation.textContent = 'Adders are greater than the Gross PPW.';
+            derivedBase = null;
+          } else {
+            contractTotal = gross * watts;
+          }
         } else {
           contractTotal = (base * watts) + adders;
         }
@@ -198,7 +204,12 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       const top = [];
       if (customer) top.push(customer.toUpperCase());
       if (hasSize) top.push(`${compact(size)} kW`);
-      if (displayPpw !== null) top.push(`${compact(displayPpw)} PPW`);
+      if (useGross && gross !== null) {
+        top.push(`${ppw(gross)} Gross PPW`);
+        if (derivedBase !== null) top.push(`${ppw(derivedBase)} Base PPW`);
+      } else if (displayPpw !== null) {
+        top.push(`${compact(displayPpw)} PPW`);
+      }
 
       const finance = [];
       if (lender) finance.push(lender);
@@ -206,7 +217,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       if (payment !== null) finance.push(money(payment));
 
       const adderLines = [];
-      if (custom > 0) adderLines.push(`${customName || 'Custom adder'} ${simpleDollar(custom)}`);
+      if (custom > 0) adderLines.push(`${customName} ${simpleDollar(custom)}`);
       if (battery > 0) adderLines.push(`${batteryName} ${simpleDollar(battery)}`);
 
       const groups = [];
