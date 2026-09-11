@@ -148,7 +148,7 @@ const largestRadius = Math.max(...WAREHOUSE_BRANCHES.map((branch) => Number.pars
       const rows = branches.filter((branch) => branch.stateCode === code);
       const label = stateNames[code] || code;
       const hasCustomerAddress = Boolean(customerAddressInput?.value.trim());
-      status.innerHTML = `<span class="status-dot" aria-hidden="true"></span><strong>${escapeHtml(label)}</strong><span>${rows.length} branch${rows.length === 1 ? '' : 'es'} shown${hasCustomerAddress ? ' · addresses open driving directions' : ''}</span>`;
+      status.innerHTML = `<span class="status-dot" aria-hidden="true"></span><strong>${escapeHtml(label)}</strong><span>${rows.length} branch${rows.length === 1 ? '' : 'es'} shown${hasCustomerAddress ? ' · <strong>Click on the addresses below to see the distance.</strong>' : ''}</span>`;
       tableBody.innerHTML = '';
       tableWrap.hidden = false;
 
