@@ -1,593 +1,154 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="SolarHelp Portal — State Solar Installer Redlines Directory, Regional Warehouses (OWE & Sunvena), and Solar PPW Proposal Calculators." />
-    <title>SolarHelp — Redlines, Warehouses & Solar Tools</title>
-    <!-- Google Fonts for Modern Typography -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <!-- Top Site Navigation Header -->
-    <header class="site-header">
-      <div class="nav-shell">
-        <a href="#redlines" class="nav-brand" id="brand-logo">
-          <div class="brand-sun" aria-hidden="true">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="5"></circle>
-              <line x1="12" y1="1" x2="12" y2="3"></line>
-              <line x1="12" y1="21" x2="12" y2="23"></line>
-              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-              <line x1="1" y1="12" x2="3" y2="12"></line>
-              <line x1="21" y1="12" x2="23" y2="12"></line>
-              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-            </svg>
-          </div>
-          <div class="brand-text">
-            <span class="brand-title">SolarHelp<span class="brand-dot">.</span></span>
-            <span class="brand-tagline">Installer Portal</span>
-          </div>
-        </a>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Solar PPW calculators for proposal pricing and quick price-per-watt calculations.">
+  <title>SolarHelp - Solar PPW Calculators</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body data-page="home">
+  <header class="site-header">
+    <div class="nav-shell">
+      <a class="brand" href="/" aria-label="SolarHelp home">SolarHelp</a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a href="/redlines">Redlines</a>
+        <a href="/warehouses-owe">OWE Warehouses</a>
+      </nav>
+    </div>
+  </header>
 
-        <!-- Desktop Navigation Menu -->
-        <nav class="main-nav" id="desktop-nav" aria-label="Main Navigation">
-          <!-- Redlines Link -->
-          <a href="#redlines" class="nav-link active" id="nav-redlines" data-view="redlines">
-            <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-            </svg>
-            <span>Redlines</span>
-          </a>
+  <main class="page-shell">
+    <div class="page-heading">
+      <h1>Solar Pricing Tools</h1>
+      <p>Two calculators for proposal pricing and quick PPW checks.</p>
+    </div>
 
-          <!-- Warehouses Dropdown -->
-          <div class="nav-dropdown" id="dropdown-warehouses">
-            <button class="nav-dropdown-trigger nav-link" id="nav-warehouses-btn" aria-expanded="false" aria-haspopup="true">
-              <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                <polyline points="9 22 9 12 15 12 15 22"></polyline>
-              </svg>
-              <span>Warehouses</span>
-              <svg class="dropdown-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="6 9 12 15 18 9"></polyline>
-              </svg>
-            </button>
-            <div class="dropdown-menu" aria-labelledby="nav-warehouses-btn">
-              <a href="#warehouses-owe" class="dropdown-item" id="nav-sub-owe" data-view="warehouses" data-tab="owe">
-                <div class="dropdown-item-info">
-                  <strong>OWE Warehouse & Branches</strong>
-                  <span>39 branch locations across 16 states</span>
-                </div>
-              </a>
-              <a href="#warehouses-sunvena" class="dropdown-item" id="nav-sub-sunvena" data-view="warehouses" data-tab="sunvena">
-                <div class="dropdown-item-info">
-                  <strong>Sunvena Warehouse</strong>
-                  <span>Florida & Georgia regional hubs</span>
-                </div>
-              </a>
-              <div class="dropdown-divider"></div>
-              <a href="#warehouses" class="dropdown-item dropdown-footer-link" id="nav-sub-all-warehouses" data-view="warehouses">
-                <span>All Warehouses Overview &rarr;</span>
-              </a>
-            </div>
-          </div>
-
-          <!-- Tools Dropdown -->
-          <div class="nav-dropdown" id="dropdown-tools">
-            <button class="nav-dropdown-trigger nav-link" id="nav-tools-btn" aria-expanded="false" aria-haspopup="true">
-              <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="4" y="2" width="16" height="20" rx="2"></rect>
-                <line x1="8" y1="6" x2="16" y2="6"></line>
-                <line x1="16" y1="14" x2="16" y2="18"></line>
-                <path d="M16 10h.01"></path>
-                <path d="M12 10h.01"></path>
-                <path d="M8 10h.01"></path>
-                <path d="M12 14h.01"></path>
-                <path d="M8 14h.01"></path>
-                <path d="M12 18h.01"></path>
-                <path d="M8 18h.01"></path>
-              </svg>
-              <span>Tools</span>
-              <svg class="dropdown-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="6 9 12 15 18 9"></polyline>
-              </svg>
-            </button>
-            <div class="dropdown-menu" aria-labelledby="nav-tools-btn">
-              <a href="#tools" class="dropdown-item" id="nav-tool-calc" data-view="tools" data-scroll="calculator-form">
-                <div class="dropdown-item-info">
-                  <strong>Solar PPW Calculator</strong>
-                  <span>Proposal breakdown & lender terms</span>
-                </div>
-              </a>
-              <a href="#tools" class="dropdown-item" id="nav-tool-quick" data-view="tools" data-scroll="quick-ppw-heading">
-                <div class="dropdown-item-info">
-                  <strong>Quick PPW Calculator</strong>
-                  <span>Loan amount and system size</span>
-                </div>
-              </a>
-            </div>
-          </div>
-        </nav>
-
-        <!-- Right Header Extras -->
-        <div class="nav-right">
-          <button class="mobile-toggle" id="mobile-toggle-btn" aria-label="Toggle Navigation Menu" aria-expanded="false">
-            <span class="hamburger-bar"></span>
-            <span class="hamburger-bar"></span>
-            <span class="hamburger-bar"></span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Mobile Navigation Drawer -->
-      <div class="mobile-nav-drawer" id="mobile-drawer" hidden>
-        <div class="mobile-nav-links">
-          <a href="#redlines" class="mobile-nav-link active" data-view="redlines">
-            <span>Redlines Directory</span>
-          </a>
-          <div class="mobile-nav-group-title">Warehouses</div>
-          <a href="#warehouses-owe" class="mobile-sub-link" data-view="warehouses" data-tab="owe">
-            OWE Warehouse & Branches (39 Locations)
-          </a>
-          <a href="#warehouses-sunvena" class="mobile-sub-link" data-view="warehouses" data-tab="sunvena">
-            Sunvena Warehouse (FL & GA)
-          </a>
-          <a href="#warehouses" class="mobile-sub-link" data-view="warehouses">
-            All Warehouses Overview
-          </a>
-          <div class="mobile-nav-group-title">Tools</div>
-          <a href="#tools" class="mobile-sub-link" data-view="tools" data-scroll="calculator-form">
-            Solar PPW Calculator
-          </a>
-          <a href="#tools" class="mobile-sub-link" data-view="tools" data-scroll="quick-ppw-heading">
-            Quick PPW Calculator
-          </a>
-        </div>
-      </div>
-    </header>
-
-    <main class="page-shell">
-
-      <!-- ============================================================ -->
-      <!-- VIEW 1: REDLINES DIRECTORY (STATE DROPDOWN & INSTALLERS)     -->
-      <!-- ============================================================ -->
-      <section id="view-redlines" class="app-view">
-        <div class="view-hero">
-          <h1>Installer Redlines</h1>
-          <p class="hero-subtitle">Select a state to view and compare solar installer rates ($/W).</p>
+    <section class="tool-layout" aria-label="Solar pricing tools">
+      <article class="panel">
+        <div class="panel-heading">
+          <h2>Proposal PPW Calculator</h2>
+          <p>Enter a system size and either Base PPW or Gross PPW. Adders are spread across the system wattage.</p>
         </div>
 
-        <!-- Clean Filter Toolbar -->
-        <div class="filter-toolbar">
-          <div class="toolbar-item state-picker">
-            <label for="state-select" class="toolbar-label">State</label>
-            <div class="select-wrapper">
-              <select id="state-select" class="custom-select" aria-label="Select US State to filter redlines">
-                <!-- Generated dynamically via JS with all states -->
+        <form id="calculator-form" class="form-stack" novalidate>
+          <div class="field-grid">
+            <label class="field field-wide" for="customerName">
+              <span>Customer name</span>
+              <input id="customerName" type="text" autocomplete="name" placeholder="Customer name">
+            </label>
+
+            <label class="field field-wide" for="lenderProgram">
+              <span>Lender program</span>
+              <select id="lenderProgram">
+                <option>EnFin Lease 25 yr 2.99%</option>
+                <option>LightReach PPA 2.99%</option>
+                <option>GoodLeap TPO 2.99%</option>
+                <option>SunRun 15 yr 2.99%</option>
+                <option>Credit Human 20 yr 8.99%</option>
+                <option>Concert 25 year 10.99%</option>
+                <option>Climate First 30.5 yr</option>
               </select>
-              <div class="select-arrow" aria-hidden="true">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <div class="toolbar-item search-item">
-            <label for="installer-search" class="toolbar-label">Search</label>
-            <div class="search-wrap">
-              <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
-              <input type="text" id="installer-search" class="search-input" placeholder="Filter by installer name..." />
-            </div>
-          </div>
-
-          <div class="toolbar-item sort-item">
-            <label for="sort-select" class="toolbar-label">Sort</label>
-            <select id="sort-select" class="sort-select">
-              <option value="lowest">Lowest Rate ($/W)</option>
-              <option value="highest">Highest Rate ($/W)</option>
-              <option value="name">Installer (A to Z)</option>
-            </select>
-          </div>
-
-          <div class="toolbar-item view-item">
-            <label class="toolbar-label">View</label>
-            <div class="view-toggle" role="group" aria-label="View format toggle">
-              <button type="button" class="toggle-btn active" id="btn-view-cards" title="Cards View" aria-pressed="true">
-                Cards
-              </button>
-              <button type="button" class="toggle-btn" id="btn-view-table" title="Table View" aria-pressed="false">
-                Table
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Clean Low-Profile Stats Bar -->
-        <div class="stats-summary-bar" id="stats-banner">
-          <div class="summary-item">
-            <span class="summary-label">State:</span>
-            <strong class="summary-value" id="stat-state-name">Florida (FL)</strong>
-          </div>
-          <span class="summary-dot">&bull;</span>
-          <div class="summary-item">
-            <span class="summary-label">Installers:</span>
-            <strong class="summary-value" id="stat-installer-count">8</strong>
-          </div>
-          <span class="summary-dot">&bull;</span>
-          <div class="summary-item">
-            <span class="summary-label">Lowest:</span>
-            <strong class="summary-value highlight-green" id="stat-lowest-rate">$2.05 <span class="rate-unit">/ W</span></strong>
-            <span class="summary-sub" id="stat-lowest-installer">(EMPOWER)</span>
-          </div>
-          <span class="summary-dot">&bull;</span>
-          <div class="summary-item">
-            <span class="summary-label">Average:</span>
-            <strong class="summary-value" id="stat-average-rate">$2.24 <span class="rate-unit">/ W</span></strong>
-          </div>
-        </div>
-
-        <!-- Dynamic Results Containers -->
-        <div id="results-feedback" class="results-feedback" aria-live="polite"></div>
-
-        <!-- Cards View -->
-        <div class="installer-grid" id="installers-grid" aria-label="List of installer redlines">
-          <!-- Cards rendered dynamically via JavaScript -->
-        </div>
-
-        <!-- Table View (Hidden by default) -->
-        <div class="table-container hidden" id="installers-table-wrap">
-          <table class="redlines-table" id="redlines-table">
-            <thead>
-              <tr>
-                <th scope="col">Installer</th>
-                <th scope="col">State</th>
-                <th scope="col">Redline Rate</th>
-                <th scope="col">Coverage Scope</th>
-                <th scope="col">Special Notes</th>
-                <th scope="col" class="text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody id="installers-table-body">
-              <!-- Rows rendered dynamically -->
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-
-      <!-- ============================================================ -->
-      <!-- VIEW 2: WAREHOUSES DIRECTORY (OWE & SUNVENA)                 -->
-      <!-- ============================================================ -->
-      <section id="view-warehouses" class="app-view hidden">
-        <div class="view-hero">
-          <h1>Warehouses & Logistics</h1>
-          <p class="hero-subtitle">Distribution hubs and branch location directory.</p>
-        </div>
-
-        <!-- Warehouse Tabs -->
-        <div class="warehouse-tabs">
-          <button type="button" class="w-tab-btn active" id="tab-btn-owe" data-target="w-panel-owe">
-            OWE Warehouses (39 Branches)
-          </button>
-          <button type="button" class="w-tab-btn" id="tab-btn-sunvena" data-target="w-panel-sunvena">
-            Sunvena Solar Logistics (FL &amp; GA)
-          </button>
-        </div>
-
-        <!-- Warehouse Panels -->
-        <div class="warehouse-panels">
-          <!-- OWE Panel -->
-          <div class="warehouse-card active" id="w-panel-owe">
-            <div class="w-header">
-              <div class="w-brand-info">
-                <h2>Our World Energy (OWE) Warehousing</h2>
-                <p class="w-sub">National solar logistics provider serving commercial and residential installers nationwide.</p>
-              </div>
-              <button type="button" class="button button-secondary view-rates-btn" data-filter-installer="OWE">
-                View OWE Redlines &rarr;
-              </button>
-            </div>
-
-            <div class="w-grid">
-              <div class="w-section">
-                <h3>Regional Distribution Hubs</h3>
-                <ul class="hub-list">
-                  <li>
-                    <strong>Phoenix, AZ</strong>
-                    <span>Primary Southwest Logistics & Staging Facility</span>
-                  </li>
-                  <li>
-                    <strong>Dallas / Fort Worth, TX</strong>
-                    <span>Central US Inverter & Tier-1 Module Hub</span>
-                  </li>
-                  <li>
-                    <strong>Orlando, FL</strong>
-                    <span>Southeast Logistics Center & Express Dispatch</span>
-                  </li>
-                  <li>
-                    <strong>Denver, CO</strong>
-                    <span>Rocky Mountain Staging Warehouse</span>
-                  </li>
-                  <li>
-                    <strong>Boston Metro, MA</strong>
-                    <span>Northeast Regional Distribution Center</span>
-                  </li>
-                </ul>
-              </div>
-
-              <div class="w-section">
-                <h3>Direct Coverage States (15 Active States)</h3>
-                <p class="w-text">Dedicated staging and installer pickup across state networks:</p>
-                <div class="coverage-grid">
-                  <div class="coverage-item"><span class="cov-state">Arizona (AZ)</span><span class="cov-rate">$2.00</span></div>
-                  <div class="coverage-item"><span class="cov-state">Colorado (CO)</span><span class="cov-rate">$2.20</span></div>
-                  <div class="coverage-item"><span class="cov-state">Texas (TX)</span><span class="cov-rate">$2.05</span></div>
-                  <div class="coverage-item"><span class="cov-state">Florida (FL)</span><span class="cov-rate">$2.20</span></div>
-                  <div class="coverage-item"><span class="cov-state">California (CA)</span><span class="cov-rate">$2.35</span></div>
-                  <div class="coverage-item"><span class="cov-state">Illinois (IL)</span><span class="cov-rate">$2.40</span></div>
-                  <div class="coverage-item"><span class="cov-state">Virginia (VA)</span><span class="cov-rate">$2.40</span></div>
-                  <div class="coverage-item"><span class="cov-state">New Jersey (NJ)</span><span class="cov-rate">$2.45</span></div>
-                  <div class="coverage-item"><span class="cov-state">Massachusetts (MA)</span><span class="cov-rate">$2.50</span></div>
-                  <div class="coverage-item"><span class="cov-state">Maryland (MD)</span><span class="cov-rate">$2.50</span></div>
-                  <div class="coverage-item"><span class="cov-state">Connecticut (CT)</span><span class="cov-rate">$2.50</span></div>
-                  <div class="coverage-item"><span class="cov-state">Rhode Island (RI)</span><span class="cov-rate">$2.50</span></div>
-                  <div class="coverage-item"><span class="cov-state">Maine (ME)</span><span class="cov-rate">$2.50</span></div>
-                  <div class="coverage-item"><span class="cov-state">New Hampshire (NH)</span><span class="cov-rate">$2.50</span></div>
-                  <div class="coverage-item"><span class="cov-state">New Mexico (NM)</span><span class="cov-rate">$2.15</span></div>
-                </div>
-
-                <div class="w-features-box">
-                  <h4>Key Warehouse Capabilities:</h4>
-                  <ul>
-                    <li>Standardized Bloomberg Tier-1 PV Module Stock (Boviet, QCells, Meyer Burger)</li>
-                    <li>Enphase IQ8 series & SolarEdge Home Hub inverters in stock</li>
-                    <li>Will-call and dedicated contractor job-site delivery routes</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            <!-- Complete OWE Branch Locations Table Section -->
-            <div class="branch-locations-section" id="branch-locations">
-              <div class="branch-section-header">
-                <div class="branch-header-info">
-                  <h3 class="branch-header-title">Our World Energy — Branch Locations</h3>
-                  <p class="branch-header-sub">Complete branch directory captured from the OWE Branch Locations page across 16 states and territories.</p>
-                </div>
-
-                <!-- State Dropdown & Count Indicator -->
-                <div class="branch-filter-controls">
-                  <div class="branch-select-group">
-                    <label for="branch-state-select" class="branch-select-label">Filter by State:</label>
-                    <div class="select-wrapper branch-select-wrapper">
-                      <select id="branch-state-select" class="custom-select branch-state-select" aria-label="Filter warehouse branch locations by state">
-                        <option value="ALL">All States</option>
-                        <!-- Populated dynamically with all states that have branches -->
-                      </select>
-                      <div class="select-arrow" aria-hidden="true">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                          <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Branch Count Indicator -->
-                  <div class="branch-count-wrap" aria-live="polite">
-                    <span class="branch-count-text" id="branch-count-badge">All States - 39 warehouses</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Responsive Scrollable Table Container -->
-              <div class="branch-table-scroll" tabindex="0" role="region" aria-label="OWE Warehouse Branch Locations Table">
-                <table class="branch-table" id="branch-locations-table">
-                  <thead>
-                    <tr>
-                      <th scope="col">Warehouse/Branch Name</th>
-                      <th scope="col">Complete Address</th>
-                      <th scope="col">City</th>
-                      <th scope="col">State</th>
-                      <th scope="col">ZIP Code</th>
-                      <th scope="col">Team Type</th>
-                      <th scope="col">Coverage Radius</th>
-                      <th scope="col">Max Travel Distance</th>
-                      <th scope="col">Phone</th>
-                    </tr>
-                  </thead>
-                  <tbody id="branch-table-body">
-                    <!-- Rendered dynamically via script.js -->
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-
-          <!-- Sunvena Panel -->
-          <div class="warehouse-card hidden" id="w-panel-sunvena">
-            <div class="w-header">
-              <div class="w-brand-info">
-                <h2>Sunvena Solar Logistics</h2>
-                <p class="w-sub">Specialized Southeast solar supply chain partner focused on Florida and Georgia operations.</p>
-              </div>
-              <button type="button" class="button button-secondary view-rates-btn" data-filter-installer="SUNVENA">
-                View Sunvena Redlines &rarr;
-              </button>
-            </div>
-
-            <div class="w-grid">
-              <div class="w-section">
-                <h3>Southeast Distribution Hubs</h3>
-                <ul class="hub-list">
-                  <li>
-                    <strong>Sanford / Orlando, FL</strong>
-                    <span>Headquarters & Central Florida Main Warehouse</span>
-                  </li>
-                  <li>
-                    <strong>Tampa Bay, FL</strong>
-                    <span>West Coast Florida Logistics & Rapid Dispatch Center</span>
-                  </li>
-                  <li>
-                    <strong>Atlanta Metro, GA</strong>
-                    <span>Georgia Regional Hub & Rail Cross-Dock Facility</span>
-                  </li>
-                </ul>
-              </div>
-
-              <div class="w-section">
-                <h3>Primary Service Coverage</h3>
-                <p class="w-text">Optimized local fulfillment for Southeast installers with market-leading redline pricing:</p>
-                <div class="coverage-grid">
-                  <div class="coverage-item"><span class="cov-state">Florida (FL)</span><span class="cov-rate">$2.15 / W</span></div>
-                  <div class="coverage-item"><span class="cov-state">Georgia (GA)</span><span class="cov-rate">$2.15 / W</span></div>
-                </div>
-
-                <div class="w-features-box">
-                  <h4>Key Warehouse Capabilities:</h4>
-                  <ul>
-                    <li>180+ MPH hurricane-certified racking and ironridge mounting inventory</li>
-                    <li>Fast morning staging with contractor-friendly will-call bays</li>
-                    <li>Full battery backup staging (Tesla Powerwall 3 & Enphase 5P)</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-
-      <!-- ============================================================ -->
-      <!-- VIEW 3: TOOLS (SOLAR PPW & QUICK CALCULATORS)                -->
-      <!-- ============================================================ -->
-      <section id="view-tools" class="app-view hidden">
-        <div class="view-hero">
-          <h1>Solar Calculators</h1>
-          <p class="hero-subtitle">Proposal breakdown and price-per-watt tools.</p>
-        </div>
-
-        <!-- Solar PPW Calculator -->
-        <section class="calculator" aria-label="Solar PPW calculator">
-          <form id="calculator-form" novalidate>
-            <div class="form-header">
-              <h2>Proposal Details</h2>
-              <p>Enter either Gross PPW or Base PPW. The calculated counterpart appears in your live proposal breakdown.</p>
-            </div>
-
-            <div class="field-grid">
-              <label class="field field-wide" for="customerName">Customer Name
-                <input id="customerName" name="customerName" type="text" autocomplete="name" placeholder="e.g. Fred McNeely" />
-              </label>
-              <label class="field field-wide" for="lenderProgram">Lender Program
-                <select id="lenderProgram" name="lenderProgram">
-                  <option>EnFin Lease 25 yr 2.99%</option>
-                  <option>LightReach PPA 2.99%</option>
-                  <option>GoodLeap TPO 2.99%</option>
-                  <option>SunRun 15 yr 2.99%</option>
-                  <option>Credit Human 20 yr 8.99%</option>
-                  <option>Concert 25 year 10.99%</option>
-                  <option>Climate First 30.5 yr</option>
-                </select>
-              </label>
-              <label class="field" for="systemSize">System Size <span class="unit">kW</span>
-                <input id="systemSize" name="systemSize" type="number" inputmode="decimal" min="0" step="0.1" placeholder="e.g. 10.5" required />
-              </label>
-              <label class="field" for="grossPpw">Gross PPW <span class="unit">$ / W</span>
-                <input id="grossPpw" name="grossPpw" type="number" inputmode="decimal" min="0" step="0.01" placeholder="e.g. 3.20" />
-              </label>
-              <label class="field" for="basePpw">Base PPW <span class="unit">$ / W</span>
-                <input id="basePpw" name="basePpw" type="number" inputmode="decimal" min="0" step="0.01" placeholder="e.g. 2.15" />
-              </label>
-              <label class="field" for="customAdder">Custom Adder <span class="unit">$</span>
-                <input id="customAdder" name="customAdder" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00" />
-              </label>
-              <label class="field" for="batteryName">Battery Name
-                <input id="batteryName" name="batteryName" type="text" value="Tesla Battery" />
-              </label>
-              <label class="field" for="batteryAmount">Battery Amount <span class="unit">$</span>
-                <input id="batteryAmount" name="batteryAmount" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00" />
-              </label>
-              <label class="field" for="monthlyPayment">Monthly Payment <span class="unit">$</span>
-                <input id="monthlyPayment" name="monthlyPayment" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00" />
-              </label>
-            </div>
-            <p id="validation" class="validation" role="alert" aria-live="polite"></p>
-            <div class="actions">
-              <button class="button button-primary" type="submit">Calculate Proposal</button>
-              <button class="button button-secondary" type="reset">Reset</button>
-            </div>
-          </form>
-
-          <aside class="results" aria-labelledby="breakdown-heading">
-            <div class="results-heading">
-              <div>
-                <h2 id="breakdown-heading">Proposal breakdown</h2>
-              </div>
-              <button id="copyButton" class="copy-button" type="button" disabled>Copy Breakdown</button>
-            </div>
-            <div id="breakdown" class="breakdown" aria-live="polite">
-              <p class="empty-state">Add a system size and either Gross PPW or Base PPW to see your proposal breakdown.</p>
-            </div>
-            <p id="copyStatus" class="copy-status" aria-live="polite"></p>
-          </aside>
-        </section>
-
-        <!-- Quick PPW Section -->
-        <section class="quick-ppw" aria-labelledby="quick-ppw-heading">
-          <div class="quick-ppw-copy">
-            <h2 id="quick-ppw-heading">Find your PPW</h2>
-            <p>Enter the loan amount and system size to calculate price per watt.</p>
-          </div>
-          <form id="quickPpwForm" class="quick-ppw-form" novalidate>
-            <label class="field" for="quickLoanAmount">Loan Amount <span class="unit">$</span>
-              <input id="quickLoanAmount" type="number" inputmode="decimal" min="0" step="0.01" placeholder="e.g. 35000" aria-describedby="quickPpwMessage" />
             </label>
-            <label class="field" for="quickSystemSize">System Size
-              <input id="quickSystemSize" type="number" inputmode="decimal" min="0" step="0.01" placeholder="e.g. 10.2" aria-describedby="quickPpwMessage" />
+
+            <label class="field" for="systemSize">
+              <span>System size (kW)</span>
+              <input id="systemSize" type="number" inputmode="decimal" min="0" step="0.01" placeholder="10.50">
             </label>
-            <label class="field" for="quickSystemUnit">Unit
-              <select id="quickSystemUnit" aria-label="System size unit">
+
+            <label class="field" for="basePpw">
+              <span>Base PPW ($/W)</span>
+              <input id="basePpw" type="number" inputmode="decimal" min="0" step="0.01" placeholder="2.15">
+            </label>
+
+            <label class="field" for="grossPpw">
+              <span>Gross PPW ($/W)</span>
+              <input id="grossPpw" type="number" inputmode="decimal" min="0" step="0.01" placeholder="3.20">
+            </label>
+
+            <label class="field" for="customAdder">
+              <span>Custom adder ($)</span>
+              <input id="customAdder" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00">
+            </label>
+
+            <label class="field" for="batteryName">
+              <span>Battery name</span>
+              <input id="batteryName" type="text" value="Tesla Battery">
+            </label>
+
+            <label class="field" for="batteryAmount">
+              <span>Battery amount ($)</span>
+              <input id="batteryAmount" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00">
+            </label>
+
+            <label class="field field-wide" for="monthlyPayment">
+              <span>Monthly payment ($)</span>
+              <input id="monthlyPayment" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00">
+            </label>
+          </div>
+
+          <p id="validation" class="form-message" role="alert" aria-live="polite"></p>
+
+          <div class="button-row">
+            <button class="button button-primary" type="submit">Calculate</button>
+            <button class="button button-secondary" type="reset">Reset</button>
+          </div>
+        </form>
+
+        <div class="result-box" aria-live="polite">
+          <div class="result-box-heading">
+            <h3>Proposal breakdown</h3>
+            <button id="copyButton" class="text-button" type="button" disabled>Copy</button>
+          </div>
+          <div id="breakdown" class="breakdown">
+            <p class="muted">Enter proposal details to see the calculation.</p>
+          </div>
+          <p id="copyStatus" class="copy-status" aria-live="polite"></p>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-heading">
+          <h2>Quick PPW Calculator</h2>
+          <p>Divide the loan amount by system wattage.</p>
+        </div>
+
+        <form id="quickPpwForm" class="form-stack" novalidate>
+          <label class="field" for="quickLoanAmount">
+            <span>Loan amount ($)</span>
+            <input id="quickLoanAmount" type="number" inputmode="decimal" min="0" step="0.01" placeholder="35000">
+          </label>
+
+          <div class="field-grid">
+            <label class="field" for="quickSystemSize">
+              <span>System size</span>
+              <input id="quickSystemSize" type="number" inputmode="decimal" min="0" step="0.01" placeholder="10.2">
+            </label>
+
+            <label class="field" for="quickSystemUnit">
+              <span>Unit</span>
+              <select id="quickSystemUnit">
                 <option value="kw">kW</option>
                 <option value="w">Watts</option>
               </select>
             </label>
-            <div class="quick-actions">
-              <button class="button button-primary" type="submit">Calculate PPW</button>
-              <button id="quickPpwReset" class="button button-secondary" type="button">Clear</button>
-            </div>
-          </form>
-          <div class="quick-result" aria-live="polite">
-            <span>Calculated PPW</span>
-            <strong id="quickPpwResult">—</strong>
-            <p id="quickPpwMessage">Add your loan amount and system size.</p>
           </div>
-        </section>
-      </section>
-    </main>
 
-    <!-- Footer -->
-    <footer class="site-footer">
-      <div class="footer-shell">
-        <div class="footer-left">
-          <strong>SolarHelp Portal</strong> &bull; Solar Installer Redlines, Warehousing & Estimation Suite.
-        </div>
-        <div class="footer-right">
-          <span>Rates current for active partner agreements.</span>
-        </div>
-      </div>
-    </footer>
+          <div class="button-row">
+            <button class="button button-primary" type="submit">Calculate PPW</button>
+            <button id="quickPpwReset" class="button button-secondary" type="button">Clear</button>
+          </div>
+        </form>
 
-    <!-- Scripts -->
-    <script src="redlines-data.js"></script>
-    <script src="script.js"></script>
-  </body>
+        <div class="quick-result" aria-live="polite">
+          <span class="muted">Calculated PPW</span>
+          <strong id="quickPpwResult">-</strong>
+          <p id="quickPpwMessage">Add the loan amount and system size.</p>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script src="/script.js"></script>
+</body>
 </html>
