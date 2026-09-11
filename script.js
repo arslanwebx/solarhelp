@@ -234,11 +234,7 @@ function renderBranchLocations(selectedState = 'ALL') {
       <td>${escapeHtml(branch.city)}</td>
       <td><strong>${escapeHtml(branch.state)}</strong></td>
       <td>${escapeHtml(branch.zip)}</td>
-      <td>
-        <span class="team-badge ${branch.teamType === 'In House' ? 'in-house' : 'integrated'}">
-          ${escapeHtml(branch.teamType)}
-        </span>
-      </td>
+      <td>${escapeHtml(branch.teamType)}</td>
       <td>${escapeHtml(branch.coverageRadius)}</td>
       <td class="${branch.maxTravel === 'Not listed' ? 'branch-cell-muted' : ''}">${escapeHtml(branch.maxTravel)}</td>
       <td class="${branch.phone === 'Not listed' ? 'branch-cell-muted' : ''}">${escapeHtml(branch.phone)}</td>
@@ -423,29 +419,15 @@ function renderRedlines() {
     const isLowest = stats.lowest !== null && item.redline === stats.lowest;
     const isNA = item.redline === null;
 
-    // Scope Badge Class
-    let badgeClass = '';
-    if (item.coverageType.includes('All States')) badgeClass = 'nationwide';
-    else if (item.coverageType.includes('Regional')) badgeClass = 'regional';
-
     // 1. Build Card Element
     const card = document.createElement('div');
     card.className = `installer-card ${isLowest ? 'is-lowest' : ''}`;
-
-    let bestBadgeHtml = isLowest 
-      ? `<span class="rate-badge-best">★ Lowest Rate in ${stateObj.code}</span>` 
-      : '';
 
     let notesHtml = '';
     if (item.notes) {
       const isWarning = item.notes.toLowerCase().includes('n/a') || item.notes.toLowerCase().includes('not available');
       notesHtml = `
         <div class="card-notes ${isWarning ? 'na-warning' : ''}">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="8" x2="12" y2="12"></line>
-            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-          </svg>
           <span>${escapeHtml(item.notes)}</span>
         </div>
       `;
@@ -455,16 +437,16 @@ function renderRedlines() {
     const unitDisplay = isNA ? '' : '<span class="price-unit">/ Watt</span>';
 
     card.innerHTML = `
-      <div class="card-top">
+      <div class="card-header">
         <div class="installer-title-wrap">
           <h3 class="installer-name">${escapeHtml(item.installer)}</h3>
-          <span class="scope-badge ${badgeClass}">${escapeHtml(item.coverageType)}</span>
+          <span class="installer-coverage">${escapeHtml(item.coverageType)}</span>
         </div>
-        ${bestBadgeHtml}
+        ${isLowest ? '<span class="lowest-pill">Lowest Rate</span>' : ''}
       </div>
 
       <div class="card-pricing">
-        <span class="price-val">${priceDisplay}</span>
+        <span class="price-val ${isLowest ? 'rate-lowest' : ''}">${priceDisplay}</span>
         ${unitDisplay}
       </div>
 
@@ -472,10 +454,7 @@ function renderRedlines() {
 
       <div class="card-footer">
         <button type="button" class="card-action-btn" data-redline="${item.redline ?? ''}" data-installer="${escapeHtml(item.installer)}" ${isNA ? 'disabled' : ''}>
-          <span>Use in PPW Calculator</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="9 18 15 12 9 6"></polyline>
-          </svg>
+          <span>Use in Calculator &rarr;</span>
         </button>
       </div>
     `;
@@ -487,17 +466,17 @@ function renderRedlines() {
     tr.innerHTML = `
       <td>
         <span class="table-installer-name">${escapeHtml(item.installer)}</span>
-        ${isLowest ? ' <span class="rate-badge-best" style="font-size:0.65rem; padding:2px 6px;">Lowest</span>' : ''}
+        ${isLowest ? ' <span class="table-lowest-label">(Lowest)</span>' : ''}
       </td>
       <td><strong>${stateObj.code}</strong></td>
       <td>
         <span class="table-rate-val ${isLowest ? 'best' : ''}">${priceDisplay}</span>
-        ${!isNA ? ' <span style="font-size:0.8rem; color:#64748b;">/W</span>' : ''}
+        ${!isNA ? ' <span class="table-unit">/W</span>' : ''}
       </td>
-      <td><span class="scope-badge ${badgeClass}">${escapeHtml(item.coverageType)}</span></td>
-      <td><span style="font-size:0.85rem; color:#64748b;">${item.notes ? escapeHtml(item.notes) : '—'}</span></td>
+      <td><span class="installer-coverage">${escapeHtml(item.coverageType)}</span></td>
+      <td><span class="table-notes">${item.notes ? escapeHtml(item.notes) : '—'}</span></td>
       <td class="text-right">
-        <button type="button" class="button button-secondary card-action-btn" style="height:36px; padding:0 12px; font-size:0.78rem;" data-redline="${item.redline ?? ''}" data-installer="${escapeHtml(item.installer)}" ${isNA ? 'disabled' : ''}>
+        <button type="button" class="button button-secondary card-action-btn" style="height:34px; padding:0 12px; font-size:0.8rem;" data-redline="${item.redline ?? ''}" data-installer="${escapeHtml(item.installer)}" ${isNA ? 'disabled' : ''}>
           Use Rate &rarr;
         </button>
       </td>

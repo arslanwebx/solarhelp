@@ -43,7 +43,6 @@
               <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
             </svg>
             <span>Redlines</span>
-            <span class="nav-pill-badge">Rates</span>
           </a>
 
           <!-- Warehouses Dropdown -->
@@ -60,22 +59,20 @@
             </button>
             <div class="dropdown-menu" aria-labelledby="nav-warehouses-btn">
               <a href="#warehouses-owe" class="dropdown-item" id="nav-sub-owe" data-view="warehouses" data-tab="owe">
-                <div class="dropdown-item-icon owe-accent">OWE</div>
                 <div class="dropdown-item-info">
-                  <strong>OWE Warehouse</strong>
-                  <span>One World Energy • 15+ States</span>
+                  <strong>OWE Warehouse & Branches</strong>
+                  <span>39 branch locations across 16 states</span>
                 </div>
               </a>
               <a href="#warehouses-sunvena" class="dropdown-item" id="nav-sub-sunvena" data-view="warehouses" data-tab="sunvena">
-                <div class="dropdown-item-icon sunvena-accent">SV</div>
                 <div class="dropdown-item-info">
                   <strong>Sunvena Warehouse</strong>
-                  <span>Southeast Logistics • FL & GA</span>
+                  <span>Florida & Georgia regional hubs</span>
                 </div>
               </a>
               <div class="dropdown-divider"></div>
               <a href="#warehouses" class="dropdown-item dropdown-footer-link" id="nav-sub-all-warehouses" data-view="warehouses">
-                <span>View All Warehouses Overview &rarr;</span>
+                <span>All Warehouses Overview &rarr;</span>
               </a>
             </div>
           </div>
@@ -102,17 +99,15 @@
             </button>
             <div class="dropdown-menu" aria-labelledby="nav-tools-btn">
               <a href="#tools" class="dropdown-item" id="nav-tool-calc" data-view="tools" data-scroll="calculator-form">
-                <div class="dropdown-item-icon tool-accent">PPW</div>
                 <div class="dropdown-item-info">
                   <strong>Solar PPW Calculator</strong>
-                  <span>Full proposal breakdown & lenders</span>
+                  <span>Proposal breakdown & lender terms</span>
                 </div>
               </a>
               <a href="#tools" class="dropdown-item" id="nav-tool-quick" data-view="tools" data-scroll="quick-ppw-heading">
-                <div class="dropdown-item-icon quick-accent">⚡</div>
                 <div class="dropdown-item-info">
                   <strong>Quick PPW Calculator</strong>
-                  <span>Fast loan amount & kW divisor</span>
+                  <span>Loan amount and system size</span>
                 </div>
               </a>
             </div>
@@ -121,10 +116,6 @@
 
         <!-- Right Header Extras -->
         <div class="nav-right">
-          <div class="status-indicator" title="Redlines data verified and active">
-            <span class="pulse-dot"></span>
-            <span class="status-text">Active Redlines</span>
-          </div>
           <button class="mobile-toggle" id="mobile-toggle-btn" aria-label="Toggle Navigation Menu" aria-expanded="false">
             <span class="hamburger-bar"></span>
             <span class="hamburger-bar"></span>
@@ -138,24 +129,23 @@
         <div class="mobile-nav-links">
           <a href="#redlines" class="mobile-nav-link active" data-view="redlines">
             <span>Redlines Directory</span>
-            <span class="badge">Rates</span>
           </a>
           <div class="mobile-nav-group-title">Warehouses</div>
           <a href="#warehouses-owe" class="mobile-sub-link" data-view="warehouses" data-tab="owe">
-            <span class="dot owe"></span> OWE Warehouse (15+ States)
+            OWE Warehouse & Branches (39 Locations)
           </a>
           <a href="#warehouses-sunvena" class="mobile-sub-link" data-view="warehouses" data-tab="sunvena">
-            <span class="dot sunvena"></span> Sunvena Warehouse (FL & GA)
+            Sunvena Warehouse (FL & GA)
           </a>
           <a href="#warehouses" class="mobile-sub-link" data-view="warehouses">
-            <span class="dot all"></span> All Warehouses Overview
+            All Warehouses Overview
           </a>
-          <div class="mobile-nav-group-title">Tools & Calculators</div>
+          <div class="mobile-nav-group-title">Tools</div>
           <a href="#tools" class="mobile-sub-link" data-view="tools" data-scroll="calculator-form">
-            <span>🧮 Solar PPW Proposal Calculator</span>
+            Solar PPW Calculator
           </a>
           <a href="#tools" class="mobile-sub-link" data-view="tools" data-scroll="quick-ppw-heading">
-            <span>⚡ Quick PPW Calculator</span>
+            Quick PPW Calculator
           </a>
         </div>
       </div>
@@ -168,134 +158,80 @@
       <!-- ============================================================ -->
       <section id="view-redlines" class="app-view">
         <div class="view-hero">
-          <div class="hero-badge">
-            <span class="badge-icon">⚡</span>
-            <span>2026 Master Redlines Directory</span>
-          </div>
-          <h1>State Installer Redlines</h1>
-          <p class="hero-subtitle">Select any US state to immediately view and compare all authorized solar installer redline rates ($/W).</p>
+          <h1>Installer Redlines</h1>
+          <p class="hero-subtitle">Select a state to view and compare solar installer rates ($/W).</p>
         </div>
 
-        <!-- State Selector & Control Panel -->
-        <div class="state-control-card">
-          <div class="control-grid">
-            <!-- State Select Dropdown -->
-            <div class="control-box state-picker-box">
-              <label for="state-select" class="control-label">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                  <circle cx="12" cy="10" r="3"></circle>
+        <!-- Clean Filter Toolbar -->
+        <div class="filter-toolbar">
+          <div class="toolbar-item state-picker">
+            <label for="state-select" class="toolbar-label">State</label>
+            <div class="select-wrapper">
+              <select id="state-select" class="custom-select" aria-label="Select US State to filter redlines">
+                <!-- Generated dynamically via JS with all states -->
+              </select>
+              <div class="select-arrow" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
-                Select State
-              </label>
-              <div class="select-wrapper">
-                <select id="state-select" class="custom-select" aria-label="Select US State to filter redlines">
-                  <!-- Generated dynamically via JS with all states -->
-                </select>
-                <div class="select-arrow" aria-hidden="true">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            <!-- Quick Popular State Chips -->
-            <div class="control-box quick-states-box">
-              <span class="control-label">Popular Solar States:</span>
-              <div class="state-chips" id="state-chips-container">
-                <button type="button" class="state-chip" data-state="FL">Florida (FL)</button>
-                <button type="button" class="state-chip" data-state="TX">Texas (TX)</button>
-                <button type="button" class="state-chip" data-state="CA">California (CA)</button>
-                <button type="button" class="state-chip" data-state="AZ">Arizona (AZ)</button>
-                <button type="button" class="state-chip" data-state="CO">Colorado (CO)</button>
-                <button type="button" class="state-chip" data-state="GA">Georgia (GA)</button>
-                <button type="button" class="state-chip" data-state="NC">North Carolina (NC)</button>
-                <button type="button" class="state-chip" data-state="OH">Ohio (OH)</button>
-                <button type="button" class="state-chip" data-state="PA">Pennsylvania (PA)</button>
               </div>
             </div>
           </div>
 
-          <!-- Secondary Toolbar: Search, Sort & View Mode -->
-          <div class="toolbar-row">
+          <div class="toolbar-item search-item">
+            <label for="installer-search" class="toolbar-label">Search</label>
             <div class="search-wrap">
               <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               </svg>
-              <input type="text" id="installer-search" class="search-input" placeholder="Search installer name..." />
+              <input type="text" id="installer-search" class="search-input" placeholder="Filter by installer name..." />
             </div>
+          </div>
 
-            <div class="toolbar-actions">
-              <div class="sort-wrap">
-                <label for="sort-select" class="sort-label">Sort:</label>
-                <select id="sort-select" class="sort-select">
-                  <option value="lowest">Lowest Rate ($/W)</option>
-                  <option value="highest">Highest Rate ($/W)</option>
-                  <option value="name">Installer (A to Z)</option>
-                </select>
-              </div>
+          <div class="toolbar-item sort-item">
+            <label for="sort-select" class="toolbar-label">Sort</label>
+            <select id="sort-select" class="sort-select">
+              <option value="lowest">Lowest Rate ($/W)</option>
+              <option value="highest">Highest Rate ($/W)</option>
+              <option value="name">Installer (A to Z)</option>
+            </select>
+          </div>
 
-              <div class="view-toggle" role="group" aria-label="View format toggle">
-                <button type="button" class="toggle-btn active" id="btn-view-cards" title="Cards View" aria-pressed="true">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="3" width="7" height="7"></rect>
-                    <rect x="14" y="3" width="7" height="7"></rect>
-                    <rect x="14" y="14" width="7" height="7"></rect>
-                    <rect x="3" y="14" width="7" height="7"></rect>
-                  </svg>
-                  <span>Cards</span>
-                </button>
-                <button type="button" class="toggle-btn" id="btn-view-table" title="Table View" aria-pressed="false">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                    <line x1="3" y1="12" x2="21" y2="12"></line>
-                    <line x1="3" y1="18" x2="21" y2="18"></line>
-                  </svg>
-                  <span>Table</span>
-                </button>
-              </div>
+          <div class="toolbar-item view-item">
+            <label class="toolbar-label">View</label>
+            <div class="view-toggle" role="group" aria-label="View format toggle">
+              <button type="button" class="toggle-btn active" id="btn-view-cards" title="Cards View" aria-pressed="true">
+                Cards
+              </button>
+              <button type="button" class="toggle-btn" id="btn-view-table" title="Table View" aria-pressed="false">
+                Table
+              </button>
             </div>
           </div>
         </div>
 
-        <!-- State Highlights Summary Cards -->
-        <div class="stats-banner" id="stats-banner">
-          <div class="stat-card primary">
-            <div class="stat-icon">📍</div>
-            <div class="stat-content">
-              <span class="stat-label">Active State</span>
-              <strong class="stat-value" id="stat-state-name">Florida (FL)</strong>
-              <span class="stat-sub" id="stat-state-sub">Southeast Region</span>
-            </div>
+        <!-- Clean Low-Profile Stats Bar -->
+        <div class="stats-summary-bar" id="stats-banner">
+          <div class="summary-item">
+            <span class="summary-label">State:</span>
+            <strong class="summary-value" id="stat-state-name">Florida (FL)</strong>
           </div>
-
-          <div class="stat-card highlight-green">
-            <div class="stat-icon">🏆</div>
-            <div class="stat-content">
-              <span class="stat-label">Best / Lowest Redline</span>
-              <strong class="stat-value" id="stat-lowest-rate">$2.05 <span class="rate-unit">/ W</span></strong>
-              <span class="stat-sub" id="stat-lowest-installer">EMPOWER</span>
-            </div>
+          <span class="summary-dot">&bull;</span>
+          <div class="summary-item">
+            <span class="summary-label">Installers:</span>
+            <strong class="summary-value" id="stat-installer-count">8</strong>
           </div>
-
-          <div class="stat-card">
-            <div class="stat-icon">📊</div>
-            <div class="stat-content">
-              <span class="stat-label">Average Redline</span>
-              <strong class="stat-value" id="stat-average-rate">$2.24 <span class="rate-unit">/ W</span></strong>
-              <span class="stat-sub">Across all authorized options</span>
-            </div>
+          <span class="summary-dot">&bull;</span>
+          <div class="summary-item">
+            <span class="summary-label">Lowest:</span>
+            <strong class="summary-value highlight-green" id="stat-lowest-rate">$2.05 <span class="rate-unit">/ W</span></strong>
+            <span class="summary-sub" id="stat-lowest-installer">(EMPOWER)</span>
           </div>
-
-          <div class="stat-card">
-            <div class="stat-icon">🏢</div>
-            <div class="stat-content">
-              <span class="stat-label">Installers Operating</span>
-              <strong class="stat-value" id="stat-installer-count">8 Installers</strong>
-              <span class="stat-sub">Active in this state</span>
-            </div>
+          <span class="summary-dot">&bull;</span>
+          <div class="summary-item">
+            <span class="summary-label">Average:</span>
+            <strong class="summary-value" id="stat-average-rate">$2.24 <span class="rate-unit">/ W</span></strong>
           </div>
         </div>
 
@@ -333,25 +269,17 @@
       <!-- ============================================================ -->
       <section id="view-warehouses" class="app-view hidden">
         <div class="view-hero">
-          <div class="hero-badge warehouse-badge">
-            <span class="badge-icon">📦</span>
-            <span>Solar Distribution & Fulfillment</span>
-          </div>
-          <h1>Partner Warehouses & Supply Hubs</h1>
-          <p class="hero-subtitle">Access equipment staging, module procurement, and regional distribution details for OWE and Sunvena.</p>
+          <h1>Warehouses & Logistics</h1>
+          <p class="hero-subtitle">Distribution hubs and branch location directory.</p>
         </div>
 
         <!-- Warehouse Tabs -->
         <div class="warehouse-tabs">
           <button type="button" class="w-tab-btn active" id="tab-btn-owe" data-target="w-panel-owe">
-            <span class="w-tab-icon">🏢</span>
-            <span>OWE (One World Energy)</span>
-            <span class="w-tab-tag">15+ States</span>
+            OWE Warehouses (39 Branches)
           </button>
           <button type="button" class="w-tab-btn" id="tab-btn-sunvena" data-target="w-panel-sunvena">
-            <span class="w-tab-icon">☀️</span>
-            <span>Sunvena Solar Logistics</span>
-            <span class="w-tab-tag">FL & GA Hubs</span>
+            Sunvena Solar Logistics (FL &amp; GA)
           </button>
         </div>
 
@@ -360,12 +288,9 @@
           <!-- OWE Panel -->
           <div class="warehouse-card active" id="w-panel-owe">
             <div class="w-header">
-              <div class="w-brand">
-                <div class="w-avatar owe">OWE</div>
-                <div>
-                  <h2>One World Energy (OWE) Warehousing</h2>
-                  <p class="w-sub">National solar logistics provider serving commercial and residential installers nationwide.</p>
-                </div>
+              <div class="w-brand-info">
+                <h2>Our World Energy (OWE) Warehousing</h2>
+                <p class="w-sub">National solar logistics provider serving commercial and residential installers nationwide.</p>
               </div>
               <button type="button" class="button button-secondary view-rates-btn" data-filter-installer="OWE">
                 View OWE Redlines &rarr;
@@ -374,7 +299,7 @@
 
             <div class="w-grid">
               <div class="w-section">
-                <h3>📍 Regional Distribution Hubs</h3>
+                <h3>Regional Distribution Hubs</h3>
                 <ul class="hub-list">
                   <li>
                     <strong>Phoenix, AZ</strong>
@@ -400,24 +325,24 @@
               </div>
 
               <div class="w-section">
-                <h3>🗺️ Direct Coverage States (15 Active States)</h3>
-                <p class="w-text">OWE provides dedicated staging and installer pickup across the following state networks:</p>
-                <div class="state-pills-list">
-                  <span class="pill">Arizona (AZ) — $2.00</span>
-                  <span class="pill">Colorado (CO) — $2.20</span>
-                  <span class="pill">Texas (TX) — $2.05</span>
-                  <span class="pill">Florida (FL) — $2.20</span>
-                  <span class="pill">California (CA) — $2.35</span>
-                  <span class="pill">Illinois (IL) — $2.40</span>
-                  <span class="pill">Virginia (VA) — $2.40</span>
-                  <span class="pill">New Jersey (NJ) — $2.45</span>
-                  <span class="pill">Massachusetts (MA) — $2.50</span>
-                  <span class="pill">Maryland (MD) — $2.50</span>
-                  <span class="pill">Connecticut (CT) — $2.50</span>
-                  <span class="pill">Rhode Island (RI) — $2.50</span>
-                  <span class="pill">Maine (ME) — $2.50</span>
-                  <span class="pill">New Hampshire (NH) — $2.50</span>
-                  <span class="pill">New Mexico (NM) — $2.15</span>
+                <h3>Direct Coverage States (15 Active States)</h3>
+                <p class="w-text">Dedicated staging and installer pickup across state networks:</p>
+                <div class="coverage-grid">
+                  <div class="coverage-item"><span class="cov-state">Arizona (AZ)</span><span class="cov-rate">$2.00</span></div>
+                  <div class="coverage-item"><span class="cov-state">Colorado (CO)</span><span class="cov-rate">$2.20</span></div>
+                  <div class="coverage-item"><span class="cov-state">Texas (TX)</span><span class="cov-rate">$2.05</span></div>
+                  <div class="coverage-item"><span class="cov-state">Florida (FL)</span><span class="cov-rate">$2.20</span></div>
+                  <div class="coverage-item"><span class="cov-state">California (CA)</span><span class="cov-rate">$2.35</span></div>
+                  <div class="coverage-item"><span class="cov-state">Illinois (IL)</span><span class="cov-rate">$2.40</span></div>
+                  <div class="coverage-item"><span class="cov-state">Virginia (VA)</span><span class="cov-rate">$2.40</span></div>
+                  <div class="coverage-item"><span class="cov-state">New Jersey (NJ)</span><span class="cov-rate">$2.45</span></div>
+                  <div class="coverage-item"><span class="cov-state">Massachusetts (MA)</span><span class="cov-rate">$2.50</span></div>
+                  <div class="coverage-item"><span class="cov-state">Maryland (MD)</span><span class="cov-rate">$2.50</span></div>
+                  <div class="coverage-item"><span class="cov-state">Connecticut (CT)</span><span class="cov-rate">$2.50</span></div>
+                  <div class="coverage-item"><span class="cov-state">Rhode Island (RI)</span><span class="cov-rate">$2.50</span></div>
+                  <div class="coverage-item"><span class="cov-state">Maine (ME)</span><span class="cov-rate">$2.50</span></div>
+                  <div class="coverage-item"><span class="cov-state">New Hampshire (NH)</span><span class="cov-rate">$2.50</span></div>
+                  <div class="coverage-item"><span class="cov-state">New Mexico (NM)</span><span class="cov-rate">$2.15</span></div>
                 </div>
 
                 <div class="w-features-box">
@@ -435,12 +360,11 @@
             <div class="branch-locations-section" id="branch-locations">
               <div class="branch-section-header">
                 <div class="branch-header-info">
-                  <div class="branch-header-badge">OWE Network</div>
                   <h3 class="branch-header-title">Our World Energy — Branch Locations</h3>
                   <p class="branch-header-sub">Complete branch directory captured from the OWE Branch Locations page across 16 states and territories.</p>
                 </div>
 
-                <!-- State Dropdown & Count Badge -->
+                <!-- State Dropdown & Count Indicator -->
                 <div class="branch-filter-controls">
                   <div class="branch-select-group">
                     <label for="branch-state-select" class="branch-select-label">Filter by State:</label>
@@ -459,7 +383,7 @@
 
                   <!-- Branch Count Indicator -->
                   <div class="branch-count-wrap" aria-live="polite">
-                    <span class="branch-count-badge" id="branch-count-badge">All States - 39 warehouses</span>
+                    <span class="branch-count-text" id="branch-count-badge">All States - 39 warehouses</span>
                   </div>
                 </div>
               </div>
@@ -491,12 +415,9 @@
           <!-- Sunvena Panel -->
           <div class="warehouse-card hidden" id="w-panel-sunvena">
             <div class="w-header">
-              <div class="w-brand">
-                <div class="w-avatar sunvena">SV</div>
-                <div>
-                  <h2>Sunvena Solar Logistics</h2>
-                  <p class="w-sub">Specialized Southeast solar supply chain partner focused on Florida and Georgia operations.</p>
-                </div>
+              <div class="w-brand-info">
+                <h2>Sunvena Solar Logistics</h2>
+                <p class="w-sub">Specialized Southeast solar supply chain partner focused on Florida and Georgia operations.</p>
               </div>
               <button type="button" class="button button-secondary view-rates-btn" data-filter-installer="SUNVENA">
                 View Sunvena Redlines &rarr;
@@ -505,7 +426,7 @@
 
             <div class="w-grid">
               <div class="w-section">
-                <h3>📍 Southeast Distribution Hubs</h3>
+                <h3>Southeast Distribution Hubs</h3>
                 <ul class="hub-list">
                   <li>
                     <strong>Sanford / Orlando, FL</strong>
@@ -523,11 +444,11 @@
               </div>
 
               <div class="w-section">
-                <h3>🗺️ Primary Service Coverage</h3>
+                <h3>Primary Service Coverage</h3>
                 <p class="w-text">Optimized local fulfillment for Southeast installers with market-leading redline pricing:</p>
-                <div class="state-pills-list">
-                  <span class="pill highlight">Florida (FL) — $2.15 / W</span>
-                  <span class="pill highlight">Georgia (GA) — $2.15 / W</span>
+                <div class="coverage-grid">
+                  <div class="coverage-item"><span class="cov-state">Florida (FL)</span><span class="cov-rate">$2.15 / W</span></div>
+                  <div class="coverage-item"><span class="cov-state">Georgia (GA)</span><span class="cov-rate">$2.15 / W</span></div>
                 </div>
 
                 <div class="w-features-box">
@@ -550,12 +471,8 @@
       <!-- ============================================================ -->
       <section id="view-tools" class="app-view hidden">
         <div class="view-hero">
-          <div class="hero-badge tools-badge">
-            <span class="badge-icon">🧮</span>
-            <span>Solar Proposal Calculators</span>
-          </div>
-          <h1>Proposal & PPW Calculators</h1>
-          <p class="hero-subtitle">Build clear solar proposal breakdowns or instantly compute price per watt based on loan amounts.</p>
+          <h1>Solar Calculators</h1>
+          <p class="hero-subtitle">Proposal breakdown and price-per-watt tools.</p>
         </div>
 
         <!-- Solar PPW Calculator -->
@@ -613,7 +530,6 @@
           <aside class="results" aria-labelledby="breakdown-heading">
             <div class="results-heading">
               <div>
-                <p class="section-label">Live estimate</p>
                 <h2 id="breakdown-heading">Proposal breakdown</h2>
               </div>
               <button id="copyButton" class="copy-button" type="button" disabled>Copy Breakdown</button>
@@ -628,7 +544,6 @@
         <!-- Quick PPW Section -->
         <section class="quick-ppw" aria-labelledby="quick-ppw-heading">
           <div class="quick-ppw-copy">
-            <p class="section-label section-label-light">Quick calculator</p>
             <h2 id="quick-ppw-heading">Find your PPW</h2>
             <p>Enter the loan amount and system size to calculate price per watt.</p>
           </div>
