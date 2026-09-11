@@ -9,7 +9,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     </div>
 
     <section class="tool-layout" aria-label="Solar pricing tools">
-      <article class="panel">
+      <article class="panel proposal-panel">
         <div class="panel-heading">
           <h2>Proposal PPW Calculator</h2>
           <p>The breakdown updates instantly as you type.</p>
@@ -83,7 +83,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           </div>
         </form>
 
-        <div class="result-box" aria-live="polite">
+        <div class="result-box proposal-breakdown" aria-live="polite">
           <div class="result-box-heading">
             <h3>Proposal breakdown</h3>
             <button id="copyButton" class="text-button" type="button" disabled>Copy</button>
@@ -93,7 +93,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </div>
       </article>
 
-      <article class="panel">
+      <article class="panel quick-panel">
         <div class="panel-heading">
           <h2>Quick PPW Calculator</h2>
           <p>Divide the loan amount by system wattage.</p>
@@ -130,6 +130,72 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       </article>
     </section>
   </main>
+
+  <style>
+    .tool-layout {
+      grid-template-columns: 1fr;
+      gap: 22px;
+    }
+
+    .proposal-panel {
+      display: grid;
+      grid-template-columns: minmax(0, 1.18fr) minmax(320px, .82fr);
+      column-gap: 28px;
+      align-items: start;
+    }
+
+    .proposal-panel > .panel-heading {
+      grid-column: 1 / -1;
+    }
+
+    .proposal-panel > #proposal-form {
+      grid-column: 1;
+      min-width: 0;
+    }
+
+    .proposal-panel > .proposal-breakdown {
+      grid-column: 2;
+      grid-row: 2;
+      margin-top: 0;
+      min-height: 360px;
+      position: sticky;
+      top: 90px;
+      background: #fff;
+      border-color: #dfe3e6;
+      box-shadow: 0 10px 28px rgba(15, 18, 22, .055);
+    }
+
+    .quick-panel {
+      width: 100%;
+    }
+
+    .quick-panel #quick-form {
+      max-width: 760px;
+    }
+
+    .quick-panel .quick-result {
+      max-width: 760px;
+    }
+
+    @media (max-width: 980px) {
+      .proposal-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .proposal-panel > .panel-heading,
+      .proposal-panel > #proposal-form,
+      .proposal-panel > .proposal-breakdown {
+        grid-column: 1;
+      }
+
+      .proposal-panel > .proposal-breakdown {
+        grid-row: auto;
+        margin-top: 22px;
+        min-height: 0;
+        position: static;
+      }
+    }
+  </style>
 
   <script>
     const $ = (id) => document.getElementById(id);
