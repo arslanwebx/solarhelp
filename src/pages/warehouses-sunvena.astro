@@ -57,13 +57,13 @@ const warehouseStates = Array.from(
           <span class="toolbar-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M7 12h10M10 18h4"></path></svg>
           </span>
-          <div><strong>Filter warehouses</strong><span>Choose Florida or Georgia to narrow the list.</span></div>
+          <div><strong>Filter warehouses</strong><span>Choose Florida or Georgia to view warehouse addresses.</span></div>
         </div>
 
         <label class="field premium-select" for="sunvena-state-select">
           <span>State</span>
           <select id="sunvena-state-select" aria-describedby="sunvena-status">
-            <option value="ALL">All SunVena warehouse states</option>
+            <option value="" selected>Select a state</option>
             {warehouseStates.map((state) => <option value={state.code}>{state.name} ({state.code})</option>)}
           </select>
         </label>
@@ -84,7 +84,7 @@ const warehouseStates = Array.from(
 
       <div id="sunvena-status" class="directory-status premium-status" aria-live="polite"></div>
 
-      <div class="table-scroll warehouse-table-wrap">
+      <div id="sunvena-table-wrap" class="table-scroll warehouse-table-wrap" hidden>
         <table class="data-table luxury-table sunvena-table">
           <thead><tr><th>Warehouse</th><th>Address</th><th>State</th></tr></thead>
           <tbody id="sunvena-table-body"></tbody>
@@ -107,6 +107,7 @@ const warehouseStates = Array.from(
     const customerAddressInput = document.getElementById('sunvena-customer-address');
     const clearCustomerAddress = document.getElementById('clear-sunvena-customer-address');
     const status = document.getElementById('sunvena-status');
+    const tableWrap = document.getElementById('sunvena-table-wrap');
     const tableBody = document.getElementById('sunvena-table-body');
     const stateNames = JSON.parse(document.getElementById('sunvena-state-data')?.textContent || '{}');
     const warehouses = JSON.parse(document.getElementById('sunvena-warehouse-data')?.textContent || '[]');
@@ -123,13 +124,22 @@ const warehouseStates = Array.from(
     }
 
     function render() {
-      if (!stateSelect || !status || !tableBody) return;
+      if (!stateSelect || !status || !tableBody || !tableWrap) return;
       const code = stateSelect.value;
-      const rows = code === 'ALL' ? warehouses : warehouses.filter((warehouse) => warehouse.stateCode === code);
-      const label = code === 'ALL' ? 'All SunVena locations' : (stateNames[code] || code);
+
+      if (!code) {
+        status.innerHTML = '<span class="status-dot" aria-hidden="true"></span><strong>Select a state</strong><span>Warehouse addresses will appear after you make a selection.</span>';
+        tableBody.innerHTML = '';
+        tableWrap.hidden = true;
+        return;
+      }
+
+      const rows = warehouses.filter((warehouse) => warehouse.stateCode === code);
+      const label = stateNames[code] || code;
       const hasCustomerAddress = Boolean(customerAddressInput?.value.trim());
       status.innerHTML = `<span class="status-dot" aria-hidden="true"></span><strong>${escapeHtml(label)}</strong><span>${rows.length} warehouse${rows.length === 1 ? '' : 's'} shown${hasCustomerAddress ? ' · addresses open driving directions' : ''}</span>`;
       tableBody.innerHTML = '';
+      tableWrap.hidden = false;
 
       if (!rows.length) {
         tableBody.innerHTML = `<tr><td class="empty-row" colspan="3">No SunVena warehouse is listed for ${escapeHtml(label)}.</td></tr>`;
