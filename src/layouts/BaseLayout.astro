@@ -71,6 +71,7 @@ const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
     </header>
     <slot />
 
+    <script src="/lender-dropdown.js"></script>
     <script is:inline>
       (() => {
         const toggle = document.querySelector('.menu-toggle');
