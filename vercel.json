@@ -1,0 +1,8 @@
+{
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "redirects": [
+    { "source": "/branch-locations", "destination": "/warehouses-owe", "permanent": true },
+    { "source": "/branches", "destination": "/warehouses-owe", "permanent": true }
+  ]
+}
