@@ -32,8 +32,27 @@
     }).format(value);
   }
 
+  function currencyFixed(value) {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(value);
+  }
+
   function formatPpw(value) {
     return Number(value).toFixed(2);
+  }
+
+  function compactNumber(value) {
+    return String(Number(value));
+  }
+
+  function simpleDollar(value) {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return '$0';
+    return `$${Number.isInteger(number) ? number : number.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')}`;
   }
 
   function initLegacyHashRedirects() {
@@ -177,6 +196,7 @@
       systemSize: $('systemSize'),
       basePpw: $('basePpw'),
       grossPpw: $('grossPpw'),
+      customAdderName: $('customAdderName'),
       customAdder: $('customAdder'),
       batteryName: $('batteryName'),
       batteryAmount: $('batteryAmount'),
@@ -204,6 +224,10 @@
       const custom = numberFromInput(fields.customAdder) ?? 0;
       const battery = numberFromInput(fields.batteryAmount) ?? 0;
       const payment = numberFromInput(fields.monthlyPayment);
+      const customer = fields.customerName.value.trim();
+      const lender = fields.lenderProgram.value.trim();
+      const customAdderName = fields.customAdderName.value.trim();
+      const batteryName = fields.batteryName.value.trim() || 'Battery';
 
       validation.textContent = '';
       copyStatus.textContent = '';
@@ -215,65 +239,76 @@
         return;
       }
 
-      if (!size || size <= 0) {
-        if (showErrors) validation.textContent = 'Enter a system size greater than zero.';
-        clear();
-        return;
-      }
+      const hasMeaningfulInput = Boolean(
+        customer ||
+        size !== null ||
+        baseInput !== null ||
+        grossInput !== null ||
+        custom > 0 ||
+        battery > 0 ||
+        payment !== null ||
+        customAdderName
+      );
 
-      if (baseInput === null && grossInput === null) {
-        if (showErrors) validation.textContent = 'Enter either Base PPW or Gross PPW.';
+      if (!hasMeaningfulInput) {
         clear();
         return;
       }
 
       const adders = custom + battery;
-      const adderPpw = adders / (size * 1000);
-      let base = baseInput;
-      let gross = grossInput;
+      const hasSize = size !== null && size > 0;
+      const hasBase = baseInput !== null;
+      const hasGross = grossInput !== null;
+      const useGross = activePpw === 'gross' || (hasGross && !hasBase);
+      const displayPpw = useGross ? grossInput : (hasBase ? baseInput : grossInput);
 
-      if (activePpw === 'gross' || (grossInput !== null && baseInput === null)) {
-        gross = grossInput;
-        base = gross - adderPpw;
-      } else {
-        base = baseInput;
-        gross = base + adderPpw;
+      let contractTotal = null;
+
+      if (hasSize && (hasBase || hasGross)) {
+        const watts = size * 1000;
+
+        if (useGross) {
+          const derivedBase = grossInput - (adders / watts);
+          if (!isValidNumber(derivedBase)) {
+            validation.textContent = 'Adders are greater than the Gross PPW. Increase Gross PPW or use Base PPW.';
+          } else {
+            contractTotal = grossInput * watts;
+          }
+        } else {
+          contractTotal = (baseInput * watts) + adders;
+        }
+      } else if (showErrors) {
+        if (!hasSize) validation.textContent = 'Enter a system size greater than zero.';
+        else if (!hasBase && !hasGross) validation.textContent = 'Enter either Base PPW or Gross PPW.';
       }
 
-      if (!isValidNumber(base) || !isValidNumber(gross)) {
-        validation.textContent = 'Adders are greater than the Gross PPW. Increase Gross PPW or use Base PPW.';
+      const topLines = [];
+      if (customer) topLines.push(customer.toUpperCase());
+      if (hasSize) topLines.push(`${compactNumber(size)} kW`);
+      if (displayPpw !== null) topLines.push(`${compactNumber(displayPpw)} PPW`);
+
+      const financeLines = [];
+      if (lender) financeLines.push(lender);
+      if (contractTotal !== null) financeLines.push(currencyFixed(contractTotal));
+      if (payment !== null) financeLines.push(currencyFixed(payment));
+
+      const adderLines = [];
+      if (custom > 0) adderLines.push(`${customAdderName || 'Custom adder'} ${simpleDollar(custom)}`);
+      if (battery > 0) adderLines.push(`${batteryName} ${simpleDollar(battery)}`);
+
+      const groups = [];
+      if (topLines.length) groups.push(topLines.join('\n'));
+      if (financeLines.length) groups.push(financeLines.join('\n'));
+      if (adderLines.length) groups.push(`Adders:\n${adderLines.join('\n')}`);
+
+      copyText = groups.join('\n\n');
+
+      if (!copyText) {
         clear();
         return;
       }
 
-      const contractTotal = gross * size * 1000;
-      const rows = [
-        ['Base PPW', `$${formatPpw(base)} / W`],
-        ['Gross PPW', `$${formatPpw(gross)} / W`],
-        ['System size', `${size} kW`],
-        ['Total adders', currency(adders)],
-        ['Contract total', currency(contractTotal)]
-      ];
-
-      if (payment !== null) rows.push(['Monthly payment', currency(payment)]);
-
-      const customer = fields.customerName.value.trim();
-      const lender = fields.lenderProgram.value;
-
-      breakdown.innerHTML = `
-        ${customer ? `<div class="breakdown-section">${escapeHtml(customer)}</div>` : ''}
-        ${lender ? `<div class="muted">${escapeHtml(lender)}</div>` : ''}
-        ${rows.map(([label, value]) => `<div class="breakdown-row"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join('')}
-      `;
-
-      copyText = [
-        customer,
-        lender,
-        ...rows.map(([label, value]) => `${label}: ${value}`),
-        custom > 0 ? `Custom adder: ${currency(custom)}` : '',
-        battery > 0 ? `${fields.batteryName.value.trim() || 'Battery'}: ${currency(battery)}` : ''
-      ].filter(Boolean).join('\n');
-
+      breakdown.innerHTML = `<div class="proposal-preview-text">${escapeHtml(copyText).replace(/\n/g, '<br>')}</div>`;
       copyButton.disabled = false;
     }
 
@@ -287,10 +322,12 @@
       render();
     });
 
-    ['systemSize', 'customAdder', 'batteryName', 'batteryAmount', 'monthlyPayment', 'customerName', 'lenderProgram'].forEach((key) => {
+    ['systemSize', 'customAdderName', 'customAdder', 'batteryName', 'batteryAmount', 'monthlyPayment', 'customerName'].forEach((key) => {
       fields[key].addEventListener('input', () => render());
-      if (fields[key].tagName === 'SELECT') fields[key].addEventListener('change', () => render());
     });
+
+    fields.lenderProgram.addEventListener('input', () => render());
+    fields.lenderProgram.addEventListener('change', () => render());
 
     form.addEventListener('submit', (event) => {
       event.preventDefault();
