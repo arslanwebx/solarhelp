@@ -3,6 +3,7 @@ import '../styles/global.css';
 import '../styles/selects.css';
 import '../styles/installers-dynamic.css';
 import '../styles/warehouse-light.css';
+import '../styles/typography.css';
 
 interface Props {
   title: string;
@@ -20,6 +21,9 @@ const resolvedTitle = path === '/' ? 'Solar Help - Calculator & Resources' : tit
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     <meta name="theme-color" content="#ffffff" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+    <link href="https://fonts.googleapis.com/css2?family=Commissioner:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <title>{resolvedTitle}</title>
   </head>
   <body>
@@ -82,6 +86,49 @@ const resolvedTitle = path === '/' ? 'Solar Help - Calculator & Resources' : tit
       </div>
     </header>
     <slot />
+
+    <script is:inline>
+      (() => {
+        const MIN_FONT_SIZE = 14;
+
+        const clampElementFont = (element) => {
+          if (!(element instanceof HTMLElement)) return;
+          if (element.closest('svg')) return;
+          const size = Number.parseFloat(window.getComputedStyle(element).fontSize);
+          if (Number.isFinite(size) && size < MIN_FONT_SIZE) {
+            element.style.fontSize = `${MIN_FONT_SIZE}px`;
+          }
+        };
+
+        const clampTree = (root) => {
+          if (!(root instanceof HTMLElement)) return;
+          clampElementFont(root);
+          root.querySelectorAll('*').forEach(clampElementFont);
+        };
+
+        const runTypographyGuard = () => {
+          if (!document.body) return;
+          clampTree(document.body);
+
+          const observer = new MutationObserver((records) => {
+            records.forEach((record) => {
+              record.addedNodes.forEach((node) => {
+                if (node instanceof HTMLElement) clampTree(node);
+              });
+            });
+          });
+
+          observer.observe(document.body, { childList: true, subtree: true });
+          window.addEventListener('resize', () => clampTree(document.body), { passive: true });
+        };
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', runTypographyGuard, { once: true });
+        } else {
+          runTypographyGuard();
+        }
+      })();
+    </script>
 
     <script is:inline>
       (() => {
