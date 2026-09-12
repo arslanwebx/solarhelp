@@ -1,16 +1,25 @@
 :root {
-  --font-ui: "Commissioner", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-ui: "Poppins", sans-serif;
   --font-size-min: 14px;
   --font-size-body: 15px;
 }
 
+/* Hard sitewide font override. This stylesheet is imported last on purpose. */
 html,
 body,
+body *,
+body *::before,
+body *::after,
 button,
 input,
 select,
-textarea {
-  font-family: var(--font-ui);
+textarea,
+option {
+  font-family: var(--font-ui) !important;
+}
+
+html {
+  font-family: var(--font-ui) !important;
 }
 
 body {
@@ -23,7 +32,8 @@ body {
 button,
 input,
 select,
-textarea {
+textarea,
+option {
   font-size: max(var(--font-size-min), 1em);
 }
 
@@ -33,7 +43,7 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: var(--font-ui);
+  font-family: var(--font-ui) !important;
   font-weight: 700;
   letter-spacing: -0.035em;
   text-wrap: balance;
@@ -46,28 +56,12 @@ h4,
 h5,
 h6 { line-height: 1.2; }
 
-p,
-li,
-td,
-th,
-label,
-a,
-span,
-strong,
-small,
-button,
-input,
-select,
-textarea {
-  font-family: inherit;
-}
-
 small,
 caption {
-  font-size: var(--font-size-min);
+  font-size: var(--font-size-min) !important;
 }
 
-/* Keep compact UI text readable without flattening the larger type hierarchy. */
+/* Compact interface text must never render below 14px. */
 .eyebrow,
 .field > span,
 .nav-link,
@@ -90,7 +84,7 @@ caption {
 .owe-source-footer,
 .trip-charge-copy span,
 .trip-charge-threshold {
-  font-size: var(--font-size-min);
+  font-size: var(--font-size-min) !important;
 }
 
 @media (max-width: 640px) {
