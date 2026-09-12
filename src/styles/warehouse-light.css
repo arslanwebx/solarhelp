@@ -1,0 +1,57 @@
+/* Minimal warehouse page headers: keep only the page title + helper copy. */
+.warehouse-page .warehouse-hero{
+  display:block;
+  overflow:visible;
+  margin:0 0 26px;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  color:var(--text);
+  box-shadow:none;
+}
+
+.warehouse-page .warehouse-hero::after{
+  display:none;
+}
+
+.warehouse-page .warehouse-hero-copy{
+  max-width:820px;
+}
+
+.warehouse-page .warehouse-hero .eyebrow,
+.warehouse-page .warehouse-stats{
+  display:none;
+}
+
+.warehouse-page .warehouse-hero h1{
+  margin:0 0 9px;
+  color:var(--text);
+  font-size:clamp(30px,4vw,42px);
+  line-height:1.08;
+  letter-spacing:-.045em;
+  font-weight:760;
+}
+
+.warehouse-page .warehouse-hero p{
+  margin:0;
+  max-width:820px;
+  color:var(--muted);
+  font-size:16px;
+  line-height:1.6;
+}
+
+@media(max-width:640px){
+  .warehouse-page .warehouse-hero{
+    margin-bottom:22px;
+  }
+
+  .warehouse-page .warehouse-hero h1{
+    font-size:30px;
+  }
+
+  .warehouse-page .warehouse-hero p{
+    font-size:15px;
+    line-height:1.55;
+  }
+}
