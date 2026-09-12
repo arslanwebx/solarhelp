@@ -1,0 +1,256 @@
+/*
+ * Installer directory results are rendered with client-side innerHTML.
+ * Astro's scoped <style> selectors do not attach their scope attribute to that
+ * generated markup, so the result cards need a global stylesheet.
+ */
+
+/* Let all three filters use the full width of their grid columns. */
+.installers-page .installer-filter-grid .premium-select {
+  width: 100%;
+}
+
+/* A denser directory layout makes 3–4 installer markets easier to scan. */
+.installers-page .installer-results.installer-results {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  background: #f7f8f9;
+}
+
+.installers-page .installer-card {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  padding: 22px;
+  border: 1px solid #dde3e7;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(17, 20, 24, 0.035);
+  overflow: hidden;
+  transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+}
+
+.installers-page .installer-card:hover {
+  transform: translateY(-1px);
+  border-color: #c6ced4;
+  box-shadow: 0 10px 26px rgba(17, 20, 24, 0.065);
+}
+
+.installers-page .installer-card.is-on-hold {
+  border-color: #d9c6ae;
+  background: #fffdfb;
+}
+
+.installers-page .installer-card-top {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.installers-page .installer-mark {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: #111418;
+  color: #fff;
+  box-shadow: 0 5px 14px rgba(17, 20, 24, 0.12);
+}
+
+.installers-page .installer-identity {
+  min-width: 0;
+}
+
+.installers-page .installer-card h2 {
+  margin: 0;
+  color: #14181b;
+  font-size: 20px;
+  line-height: 1.2;
+  letter-spacing: -.02em;
+  overflow-wrap: anywhere;
+}
+
+.installers-page .installer-card p {
+  margin: 5px 0 0;
+  color: #68717a;
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
+.installers-page .installer-availability {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 29px;
+  padding: 6px 9px;
+  border: 1px solid #cfe0d4;
+  border-radius: 7px;
+  background: #f7faf8;
+  color: #31563f;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  white-space: nowrap;
+}
+
+.installers-page .installer-availability.hold {
+  border-color: #ddcdb9;
+  background: #fbf8f4;
+  color: #795932;
+}
+
+.installers-page .installer-note {
+  margin-top: 16px;
+  padding: 12px 13px;
+  border: 1px solid #e3e7ea;
+  border-radius: 8px;
+  background: #f8f9fa;
+  color: #525c64;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.installers-page .installer-lenders {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #e9edf0;
+  min-width: 0;
+}
+
+.installers-page .installer-lenders-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 11px;
+}
+
+.installers-page .installer-lenders-heading > span {
+  color: #59626a;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.installers-page .installer-lenders-heading > strong {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 24px;
+  padding: 0 7px;
+  border-radius: 6px;
+  background: #111418;
+  color: #fff;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.installers-page .lender-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.installers-page .lender-chip {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-height: 32px;
+  padding: 6px 10px;
+  border: 1px solid #d9dfe4;
+  border-radius: 8px;
+  background: #fff;
+  color: #252b30;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.installers-page .installer-lenders-empty p {
+  margin: 0;
+  color: #7a838a;
+  font-size: 13px;
+}
+
+.installers-page .installer-empty {
+  grid-column: 1 / -1;
+  padding: 34px 20px;
+  text-align: center;
+  color: #69727a;
+  border: 1px dashed #d2d9de;
+  border-radius: 11px;
+  background: #fff;
+}
+
+@media (max-width: 900px) {
+  .installers-page .installer-results.installer-results {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .installers-page .installer-card {
+    padding: 17px;
+    border-radius: 11px;
+  }
+
+  .installers-page .installer-card-top {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: 12px;
+  }
+
+  .installers-page .installer-mark {
+    width: 40px;
+    height: 40px;
+    border-radius: 9px;
+  }
+
+  .installers-page .installer-card h2 {
+    font-size: 17px;
+  }
+
+  .installers-page .installer-availability {
+    grid-column: 2;
+    justify-self: start;
+    margin-top: 3px;
+  }
+
+  .installers-page .installer-lenders {
+    margin-top: 15px;
+    padding-top: 14px;
+  }
+
+  .installers-page .lender-chip-list {
+    gap: 6px;
+  }
+
+  .installers-page .lender-chip {
+    min-height: 30px;
+    padding: 6px 9px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 390px) {
+  .installers-page .installer-card-top {
+    grid-template-columns: 1fr;
+  }
+
+  .installers-page .installer-mark {
+    margin-bottom: 2px;
+  }
+
+  .installers-page .installer-availability {
+    grid-column: 1;
+    justify-self: start;
+  }
+}
