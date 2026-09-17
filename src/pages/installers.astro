@@ -10,17 +10,18 @@ const installerStates = US_STATES
   .filter((state) => INSTALLERS.some((installer) => installer.states.includes(state.code)))
   .sort((a, b) => a.name.localeCompare(b.name));
 ---
-<BaseLayout title="Installers - SolarHelp" description="Find solar installers and available lender coverage by state.">
+<BaseLayout title="Installers & Redlines Directory - SolarHelp" description="Find solar installers, state-by-state redlines, and approved lender coverage.">
   <main class="page-shell installers-page">
     <section class="installers-hero" aria-labelledby="installers-title">
       <div class="installers-hero-copy">
-        <span class="eyebrow">SOLAR COVERAGE DIRECTORY</span>
+        <span class="eyebrow">SOLAR COVERAGE & REDLINES DIRECTORY</span>
         <h1 id="installers-title">Installers</h1>
-        <p>Select a state to see the installers available in that market. The installer and lender filters update automatically based on your selection.</p>
+        <p>Explore confirmed installer coverage, state redline PPWs, lowest-rate benchmarks, and approved financing partners. Select a state or an installer to get started.</p>
       </div>
       <div class="installers-summary" aria-label="Installer coverage summary">
         <div><strong>{INSTALLERS.length}</strong><span>Installers</span></div>
         <div><strong>{installerStates.length}</strong><span>States & territories</span></div>
+        <div><strong>{LENDERS.length}</strong><span>Lenders</span></div>
       </div>
     </section>
 
@@ -29,33 +30,38 @@ const installerStates = US_STATES
         <label class="field premium-select" for="installer-state-select">
           <span>State / territory</span>
           <select id="installer-state-select" aria-describedby="installer-directory-status">
-            <option value="" selected>Select a state / territory</option>
+            <option value="" selected>All states ({installerStates.length})</option>
             {installerStates.map((state) => <option value={state.code}>{state.name} ({state.code})</option>)}
           </select>
         </label>
 
         <label class="field premium-select" for="installer-select">
           <span>Installer</span>
-          <select id="installer-select" disabled>
-            <option value="" selected>Select a state first</option>
+          <select id="installer-select" aria-describedby="installer-directory-status">
+            <option value="" selected>All installers ({INSTALLERS.length})</option>
+            {INSTALLERS.map((installer) => <option value={installer.name}>{installer.name}</option>)}
           </select>
         </label>
 
         <label class="field premium-select" for="lender-select">
           <span>Lender</span>
-          <select id="lender-select" disabled>
-            <option value="" selected>Select a state first</option>
+          <select id="lender-select" aria-describedby="installer-directory-status">
+            <option value="" selected>All lenders ({LENDERS.length})</option>
+            {LENDERS.map((lender) => <option value={lender.name}>{lender.name}</option>)}
           </select>
         </label>
       </div>
 
       <div id="installer-directory-status" class="installer-status" aria-live="polite">
-        <span class="status-dot" aria-hidden="true"></span>
-        <strong>Select a state / territory</strong>
-        <span>Available installers will appear below.</span>
+        <div class="status-left">
+          <span class="status-dot" aria-hidden="true"></span>
+          <strong id="installer-status-title">All Confirmed Installers</strong>
+          <span id="installer-status-desc">Select a state or installer to view detailed redlines and lender coverage.</span>
+        </div>
+        <button id="installer-reset-btn" class="status-reset-link" type="button" hidden>Reset filters</button>
       </div>
 
-      <div id="installer-results" class="installer-results" hidden></div>
+      <div id="installer-results" class="installer-results"></div>
     </section>
   </main>
 
@@ -67,139 +73,310 @@ const installerStates = US_STATES
     const stateSelect = document.getElementById('installer-state-select');
     const installerSelect = document.getElementById('installer-select');
     const lenderSelect = document.getElementById('lender-select');
-    const status = document.getElementById('installer-directory-status');
+    const statusTitle = document.getElementById('installer-status-title');
+    const statusDesc = document.getElementById('installer-status-desc');
+    const resetBtn = document.getElementById('installer-reset-btn');
     const results = document.getElementById('installer-results');
     const installers = JSON.parse(document.getElementById('installer-data')?.textContent || '[]');
     const lenders = JSON.parse(document.getElementById('lender-data')?.textContent || '[]');
     const stateNames = JSON.parse(document.getElementById('installer-state-names')?.textContent || '{}');
 
-    const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+    const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[char]));
 
-    function installerNote(installer, stateCode) {
-      return installer?.stateNotes?.[stateCode] || '';
-    }
-
-    function installersForState(stateCode) {
-      return installers.filter((installer) => installer.states.includes(stateCode));
+    function getLowestRateForState(stateCode) {
+      const numericRates = installers
+        .filter((inst) => inst.states.includes(stateCode))
+        .map((inst) => inst.rates?.[stateCode])
+        .filter((r) => typeof r === 'number');
+      return numericRates.length ? Math.min(...numericRates) : null;
     }
 
     function lendersForSelection(stateCode, installerName = '') {
-      const stateInstallerNames = installersForState(stateCode).map((installer) => installer.name);
       return lenders.filter((lender) => {
-        if (!Array.isArray(lender.states) || !lender.states.includes(stateCode)) return false;
+        if (stateCode && (!Array.isArray(lender.states) || !lender.states.includes(stateCode))) return false;
         if (!Array.isArray(lender.installers)) return false;
         if (installerName) return lender.installers.includes(installerName);
-        return lender.installers.some((name) => stateInstallerNames.includes(name));
+        return true;
       });
     }
 
-    function setInstallerOptions(stateCode) {
-      if (!installerSelect) return [];
-      const available = installersForState(stateCode);
-      installerSelect.innerHTML = '';
+    function syncStateOptions(currentInstallerName) {
+      if (!stateSelect) return;
+      const prevVal = stateSelect.value;
+      const relevantStates = currentInstallerName
+        ? (installers.find((i) => i.name === currentInstallerName)?.states || [])
+        : Array.from(new Set(installers.flatMap((i) => i.states)));
 
-      const allOption = document.createElement('option');
-      allOption.value = '';
-      allOption.textContent = available.length ? `All installers (${available.length})` : 'No installers listed';
-      installerSelect.appendChild(allOption);
+      const sortedStates = relevantStates
+        .map((code) => ({ code, name: stateNames[code] || code }))
+        .sort((a, b) => a.name.localeCompare(b.name));
 
-      available.forEach((installer) => {
-        const option = document.createElement('option');
-        option.value = installer.name;
-        const note = installerNote(installer, stateCode);
-        option.textContent = note ? `${installer.name} — ${note}` : installer.name;
-        installerSelect.appendChild(option);
+      stateSelect.innerHTML = '';
+      const allOpt = document.createElement('option');
+      allOpt.value = '';
+      allOpt.textContent = currentInstallerName
+        ? `All states for ${currentInstallerName} (${sortedStates.length})`
+        : `All states (${sortedStates.length})`;
+      stateSelect.appendChild(allOpt);
+
+      sortedStates.forEach(({ code, name }) => {
+        const opt = document.createElement('option');
+        opt.value = code;
+        opt.textContent = `${name} (${code})`;
+        stateSelect.appendChild(opt);
       });
 
-      installerSelect.disabled = available.length === 0;
-      return available;
-    }
-
-    function setLenderOptions(stateCode, installerName = '') {
-      if (!lenderSelect) return [];
-      const available = lendersForSelection(stateCode, installerName);
-      lenderSelect.innerHTML = '';
-
-      if (!available.length) {
-        const option = document.createElement('option');
-        option.value = '';
-        option.textContent = installerName ? 'Lender data not added for this installer' : 'No lender data added for this state';
-        lenderSelect.appendChild(option);
-        lenderSelect.disabled = true;
-        return available;
+      if (relevantStates.includes(prevVal)) {
+        stateSelect.value = prevVal;
       }
+    }
 
-      const allOption = document.createElement('option');
-      allOption.value = '';
-      allOption.textContent = `All lenders (${available.length})`;
-      lenderSelect.appendChild(allOption);
+    function syncInstallerOptions(currentStateCode) {
+      if (!installerSelect) return;
+      const prevVal = installerSelect.value;
+      const relevantInstallers = currentStateCode
+        ? installers.filter((i) => i.states.includes(currentStateCode))
+        : installers;
 
-      available.forEach((lender) => {
-        const option = document.createElement('option');
-        option.value = lender.name;
-        option.textContent = lender.name;
-        lenderSelect.appendChild(option);
+      installerSelect.innerHTML = '';
+      const allOpt = document.createElement('option');
+      allOpt.value = '';
+      allOpt.textContent = currentStateCode
+        ? `All installers in ${currentStateCode} (${relevantInstallers.length})`
+        : `All installers (${relevantInstallers.length})`;
+      installerSelect.appendChild(allOpt);
+
+      relevantInstallers.forEach((inst) => {
+        const opt = document.createElement('option');
+        opt.value = inst.name;
+        opt.textContent = inst.name;
+        installerSelect.appendChild(opt);
       });
 
-      lenderSelect.disabled = false;
-      return available;
+      if (relevantInstallers.some((i) => i.name === prevVal)) {
+        installerSelect.value = prevVal;
+      }
+    }
+
+    function syncLenderOptions(currentStateCode, currentInstallerName) {
+      if (!lenderSelect) return;
+      const prevVal = lenderSelect.value;
+      const relevantLenders = lenders.filter((lender) => {
+        if (currentStateCode && (!Array.isArray(lender.states) || !lender.states.includes(currentStateCode))) return false;
+        if (currentInstallerName && (!Array.isArray(lender.installers) || !lender.installers.includes(currentInstallerName))) return false;
+        return true;
+      });
+
+      lenderSelect.innerHTML = '';
+      const allOpt = document.createElement('option');
+      allOpt.value = '';
+      allOpt.textContent = relevantLenders.length
+        ? `All lenders (${relevantLenders.length})`
+        : 'No approved lenders listed';
+      lenderSelect.appendChild(allOpt);
+
+      relevantLenders.forEach((l) => {
+        const opt = document.createElement('option');
+        opt.value = l.name;
+        opt.textContent = l.name;
+        lenderSelect.appendChild(opt);
+      });
+
+      if (relevantLenders.some((l) => l.name === prevVal)) {
+        lenderSelect.value = prevVal;
+      } else {
+        lenderSelect.value = '';
+      }
+    }
+
+    function renderOverview() {
+      if (!results || !statusTitle || !statusDesc || !resetBtn) return;
+      resetBtn.hidden = true;
+      statusTitle.textContent = 'All Confirmed Installers';
+      statusDesc.textContent = 'Select a state to compare installers, or click any installer below to view its state-by-state redlines and lenders.';
+
+      results.className = 'installer-overview-grid';
+
+      results.innerHTML = installers.map((installer) => {
+        const numeric = Object.values(installer.rates || {}).filter((r) => typeof r === 'number');
+        const minRate = numeric.length ? Math.min(...numeric) : null;
+        const maxRate = numeric.length ? Math.max(...numeric) : null;
+        const rateString = minRate !== null
+          ? (minRate === maxRate ? `$${minRate.toFixed(2)} / W` : `$${minRate.toFixed(2)} – $${maxRate.toFixed(2)} / W`)
+          : 'Rate sheet pending';
+
+        const statesPreview = installer.states.slice(0, 10);
+        const extraCount = installer.states.length - statesPreview.length;
+
+        return `
+          <div class="installer-overview-card" data-installer-target="${escapeHtml(installer.name)}">
+            <div>
+              <div class="overview-header">
+                <h2 class="overview-title">${escapeHtml(installer.name)}</h2>
+                <span class="overview-badge">${installer.states.length} States</span>
+              </div>
+
+              <div class="overview-rate-box">
+                <span class="overview-rate-label">Redline PPW Range</span>
+                <strong class="overview-rate-value">${rateString}</strong>
+              </div>
+
+              <div class="overview-states-wrap">
+                ${statesPreview.map((st) => `<span class="state-chip-mini">${escapeHtml(st)}</span>`).join('')}
+                ${extraCount > 0 ? `<span class="state-chip-mini">+${extraCount} more</span>` : ''}
+              </div>
+            </div>
+
+            <button type="button" class="overview-action-btn" data-installer-target="${escapeHtml(installer.name)}">
+              View States & Rates →
+            </button>
+          </div>
+        `;
+      }).join('');
+
+      results.querySelectorAll('[data-installer-target]').forEach((el) => {
+        el.addEventListener('click', () => {
+          const target = el.getAttribute('data-installer-target');
+          if (target && installerSelect) {
+            installerSelect.value = target;
+            if (stateSelect) stateSelect.value = '';
+            syncStateOptions(target);
+            syncLenderOptions('', target);
+            render();
+          }
+        });
+      });
     }
 
     function render() {
-      if (!stateSelect || !installerSelect || !lenderSelect || !status || !results) return;
+      if (!stateSelect || !installerSelect || !lenderSelect || !statusTitle || !statusDesc || !results || !resetBtn) return;
       const stateCode = stateSelect.value;
+      const installerName = installerSelect.value;
+      const lenderName = lenderSelect.value;
 
-      if (!stateCode) {
-        installerSelect.innerHTML = '<option value="">Select a state first</option>';
-        installerSelect.disabled = true;
-        lenderSelect.innerHTML = '<option value="">Select a state first</option>';
-        lenderSelect.disabled = true;
-        status.innerHTML = '<span class="status-dot" aria-hidden="true"></span><strong>Select a state / territory</strong><span>Available installers will appear below.</span>';
-        results.innerHTML = '';
-        results.hidden = true;
+      // When no filter is active, show the interactive overview of all 9 installers
+      if (!stateCode && !installerName && !lenderName) {
+        renderOverview();
         return;
       }
 
-      const stateName = stateNames[stateCode] || stateCode;
-      const stateInstallers = installersForState(stateCode);
-      const selectedInstaller = installerSelect.value;
-      const selectedLender = lenderSelect.value;
+      resetBtn.hidden = false;
+      results.className = 'installer-results installer-results';
 
-      let visibleInstallers = selectedInstaller
-        ? stateInstallers.filter((installer) => installer.name === selectedInstaller)
-        : stateInstallers;
+      let items = [];
 
-      if (selectedLender) {
-        const lender = lenders.find((item) => item.name === selectedLender && item.states?.includes(stateCode));
-        if (lender?.installers) {
-          visibleInstallers = visibleInstallers.filter((installer) => lender.installers.includes(installer.name));
+      if (stateCode && installerName) {
+        const inst = installers.find((i) => i.name === installerName);
+        if (inst && inst.states.includes(stateCode)) {
+          items.push({ installer: inst, stateCode });
+        }
+      } else if (stateCode) {
+        const matched = installers.filter((i) => i.states.includes(stateCode));
+        matched.forEach((inst) => items.push({ installer: inst, stateCode }));
+      } else if (installerName) {
+        const inst = installers.find((i) => i.name === installerName);
+        if (inst) {
+          inst.states.forEach((st) => items.push({ installer: inst, stateCode: st }));
+        }
+      } else if (lenderName) {
+        const lender = lenders.find((l) => l.name === lenderName);
+        if (lender) {
+          installers.forEach((inst) => {
+            if (lender.installers.includes(inst.name)) {
+              inst.states.forEach((st) => {
+                if (lender.states.includes(st)) {
+                  items.push({ installer: inst, stateCode: st });
+                }
+              });
+            }
+          });
         }
       }
 
-      status.innerHTML = `<span class="status-dot" aria-hidden="true"></span><strong>${escapeHtml(stateName)} (${escapeHtml(stateCode)})</strong><span>${stateInstallers.length} installer${stateInstallers.length === 1 ? '' : 's'} available</span>`;
-      results.hidden = false;
+      if (lenderName && (stateCode || installerName)) {
+        const lender = lenders.find((l) => l.name === lenderName);
+        if (lender) {
+          items = items.filter((item) => {
+            const lenderHasInstaller = lender.installers.includes(item.installer.name);
+            const lenderHasState = lender.states.includes(item.stateCode);
+            return lenderHasInstaller && lenderHasState;
+          });
+        } else {
+          items = [];
+        }
+      }
 
-      if (!visibleInstallers.length) {
-        results.innerHTML = '<div class="installer-empty">No installers are listed for this selection.</div>';
+      if (installerName && !stateCode) {
+        items.sort((a, b) => (stateNames[a.stateCode] || a.stateCode).localeCompare(stateNames[b.stateCode] || b.stateCode));
+      } else {
+        items.sort((a, b) => a.installer.name.localeCompare(b.installer.name));
+      }
+
+      if (stateCode && installerName) {
+        const stName = stateNames[stateCode] || stateCode;
+        statusTitle.textContent = `${installerName} in ${stName} (${stateCode})`;
+        statusDesc.textContent = items.length ? 'Confirmed redline rate & approved lenders below.' : 'No matching coverage found.';
+      } else if (stateCode) {
+        const stName = stateNames[stateCode] || stateCode;
+        const lowest = getLowestRateForState(stateCode);
+        const lowestStr = lowest !== null ? ` • Lowest redline: $${lowest.toFixed(2)} / W` : '';
+        statusTitle.textContent = `${stName} (${stateCode})`;
+        statusDesc.textContent = `${items.length} installer${items.length === 1 ? '' : 's'} available${lowestStr}`;
+      } else if (installerName) {
+        statusTitle.textContent = `${installerName}`;
+        statusDesc.textContent = `${items.length} confirmed state${items.length === 1 ? '' : 's'} & territories`;
+      } else if (lenderName) {
+        statusTitle.textContent = `Lender: ${lenderName}`;
+        statusDesc.textContent = `${items.length} supported market${items.length === 1 ? '' : 's'} across approved installers`;
+      }
+
+      if (!items.length) {
+        results.innerHTML = `
+          <div class="installer-empty">
+            <strong>No matching installer records found</strong>
+            <p>No installer in this directory matches your active filter selection. Try selecting a different state, installer, or resetting filters.</p>
+          </div>
+        `;
         return;
       }
 
-      results.innerHTML = visibleInstallers.map((installer) => {
-        const note = installerNote(installer, stateCode);
-        const isOnHold = note.toUpperCase() === 'ON HOLD';
-        const knownLenders = lendersForSelection(stateCode, installer.name);
+      results.innerHTML = items.map(({ installer, stateCode: stCode }) => {
+        const stName = stateNames[stCode] || stCode;
+        const redline = Object.prototype.hasOwnProperty.call(installer.rates, stCode) ? installer.rates[stCode] : null;
+        const lowestForState = getLowestRateForState(stCode);
+        const isLowest = redline !== null && lowestForState !== null && redline === lowestForState;
+
+        const specificNote = installer.notes?.[stCode] || installer.stateNotes?.[stCode] || '';
+        const isOnHold = specificNote.toUpperCase() === 'ON HOLD';
+
+        const noteParts = [];
+        if (specificNote) noteParts.push(specificNote);
+        if (redline === null) noteParts.push('Coverage confirmed; redline not provided in current rate sheet.');
+        const noteText = noteParts.join(' ');
+
+        const knownLenders = lendersForSelection(stCode, installer.name);
         const lenderMarkup = knownLenders.length
           ? `<div class="installer-lenders">
               <div class="installer-lenders-heading">
-                <span>Available lenders</span>
+                <span>Approved lenders in ${escapeHtml(stCode)}</span>
                 <strong>${knownLenders.length}</strong>
               </div>
-              <div class="lender-chip-list">${knownLenders.map((lender) => `<span class="lender-chip">${escapeHtml(lender.name)}</span>`).join('')}</div>
+              <div class="lender-chip-list">
+                ${knownLenders.map((l) => `<span class="lender-chip">${escapeHtml(l.name)}</span>`).join('')}
+              </div>
             </div>`
           : `<div class="installer-lenders installer-lenders-empty">
-              <div class="installer-lenders-heading"><span>Available lenders</span></div>
+              <div class="installer-lenders-heading"><span>Approved lenders in ${escapeHtml(stCode)}</span></div>
               <p>Lender coverage has not been added for this installer yet.</p>
             </div>`;
+
+        const redlineDisplay = redline === null ? 'N/A' : `$${Number(redline).toFixed(2)} / W`;
 
         return `
           <article class="installer-card${isOnHold ? ' is-on-hold' : ''}">
@@ -209,11 +386,37 @@ const installerStates = US_STATES
               </span>
               <div class="installer-identity">
                 <h2>${escapeHtml(installer.name)}</h2>
-                <p>${escapeHtml(stateName)} (${escapeHtml(stateCode)})</p>
+                <p>${escapeHtml(stName)} (${escapeHtml(stCode)})</p>
               </div>
               <span class="installer-availability${isOnHold ? ' hold' : ''}">${isOnHold ? 'ON HOLD' : 'AVAILABLE'}</span>
             </div>
-            ${note && !isOnHold ? `<div class="installer-note">${escapeHtml(note)}</div>` : ''}
+
+            <div class="installer-rate-section">
+              <div class="installer-rate-row">
+                <div class="installer-rate-details">
+                  <span class="installer-rate-label">Redline Rate</span>
+                  <span class="installer-rate-value ${isLowest ? 'is-lowest' : ''} ${redline === null ? 'is-na' : ''}">
+                    ${redlineDisplay}
+                  </span>
+                </div>
+                ${isLowest ? `<span class="rate-badge-lowest">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  Lowest in ${escapeHtml(stCode)}
+                </span>` : ''}
+              </div>
+
+              <div class="installer-coverage-meta">
+                <span class="coverage-confirmed-pill">
+                  <span class="coverage-dot"></span>
+                  Confirmed state coverage
+                </span>
+                ${redline !== null ? `<span class="rate-unit-note">Per watt base</span>` : `<span class="rate-sheet-pending">Rate sheet pending</span>`}
+              </div>
+            </div>
+
+            ${noteText && !isOnHold ? `<div class="installer-note">${escapeHtml(noteText)}</div>` : ''}
+            ${isOnHold ? `<div class="installer-note is-hold-note"><strong>Status:</strong> Operations currently ON HOLD in ${escapeHtml(stCode)}.</div>` : ''}
+
             ${lenderMarkup}
           </article>
         `;
@@ -222,22 +425,31 @@ const installerStates = US_STATES
 
     stateSelect?.addEventListener('change', () => {
       const stateCode = stateSelect.value;
-      if (!stateCode) {
-        render();
-        return;
-      }
-      setInstallerOptions(stateCode);
-      setLenderOptions(stateCode);
+      syncInstallerOptions(stateCode);
+      syncLenderOptions(stateCode, installerSelect?.value || '');
       render();
     });
 
     installerSelect?.addEventListener('change', () => {
-      const stateCode = stateSelect?.value || '';
-      if (stateCode) setLenderOptions(stateCode, installerSelect.value);
+      const instName = installerSelect.value;
+      syncStateOptions(instName);
+      syncLenderOptions(stateSelect?.value || '', instName);
       render();
     });
 
     lenderSelect?.addEventListener('change', render);
+
+    resetBtn?.addEventListener('click', () => {
+      if (stateSelect) stateSelect.value = '';
+      if (installerSelect) installerSelect.value = '';
+      if (lenderSelect) lenderSelect.value = '';
+      syncStateOptions('');
+      syncInstallerOptions('');
+      syncLenderOptions('', '');
+      render();
+    });
+
+    // Initial render
     render();
   </script>
 
@@ -249,7 +461,7 @@ const installerStates = US_STATES
     .installers-hero p{max-width:760px;margin:0;color:#d5d9dc;font-size:15px;line-height:1.65}
     .installers-hero .eyebrow{color:#b9c0c5;font-size:11px;font-weight:800;letter-spacing:.14em}
     .installers-summary{display:flex;gap:10px}
-    .installers-summary>div{min-width:128px;padding:15px 17px;border:1px solid rgba(255,255,255,.14);border-radius:10px;background:#171b1f}
+    .installers-summary>div{min-width:110px;padding:15px 17px;border:1px solid rgba(255,255,255,.14);border-radius:10px;background:#171b1f}
     .installers-summary strong,.installers-summary span{display:block}
     .installers-summary strong{font-size:22px;line-height:1.1}
     .installers-summary span{margin-top:4px;color:#bfc5c9;font-size:12px}
@@ -259,34 +471,6 @@ const installerStates = US_STATES
     .installer-filter-grid .field{min-width:0}
     .installer-filter-grid .field>span{font-size:13.5px;font-weight:760;color:#343b42}
     .installer-filter-grid select{width:100%;min-width:0;min-height:48px;background:#fff;font-size:14.5px}
-    .installer-filter-grid select:disabled{background:#f7f8f9;color:#8a9299;cursor:not-allowed}
-
-    .installer-status{display:flex;align-items:center;gap:8px;min-height:52px;padding:13px 22px;border-bottom:1px solid #e5e9ec;background:#fff;color:#626b73;font-size:14px;line-height:1.45}
-    .installer-status strong{color:#202428}
-    .installer-status .status-dot{flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:#76552f;box-shadow:0 0 0 4px rgba(118,85,47,.08)}
-
-    .installer-results{display:grid;grid-template-columns:1fr;gap:16px;padding:22px;background:#fff}
-    .installer-card{box-sizing:border-box;width:100%;min-width:0;padding:22px;border:1px solid #dfe4e8;border-radius:13px;background:#fff;box-shadow:0 5px 18px rgba(17,20,24,.035);overflow:hidden;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
-    .installer-card:hover{transform:translateY(-1px);border-color:#c7ced4;box-shadow:0 10px 26px rgba(17,20,24,.06)}
-    .installer-card.is-on-hold{border-color:#d9c6ae}
-    .installer-card-top{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:14px;min-width:0}
-    .installer-mark{flex:0 0 auto;width:44px;height:44px;border-radius:10px;display:grid;place-items:center;background:#111418;color:#fff;box-shadow:0 5px 14px rgba(17,20,24,.12)}
-    .installer-identity{min-width:0}
-    .installer-card h2{margin:0;color:#14181b;font-size:20px;line-height:1.2;letter-spacing:-.02em;overflow-wrap:anywhere}
-    .installer-card p{margin:5px 0 0;color:#68717a;font-size:13.5px;line-height:1.45}
-    .installer-availability{display:inline-flex;align-items:center;justify-content:center;min-height:29px;padding:6px 9px;border:1px solid #cfe0d4;border-radius:7px;background:#f7faf8;color:#31563f;font-size:10.5px;font-weight:800;letter-spacing:.06em;white-space:nowrap}
-    .installer-availability.hold{border-color:#ddcdb9;background:#fbf8f4;color:#795932}
-    .installer-note{margin-top:16px;padding:13px 14px;border:1px solid #e6e9ec;border-radius:8px;background:#fafbfb;color:#525c64;font-size:13.5px;line-height:1.5}
-
-    .installer-lenders{margin-top:18px;padding-top:16px;border-top:1px solid #e9edf0;min-width:0}
-    .installer-lenders-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:11px}
-    .installer-lenders-heading>span{color:#59626a;font-size:12px;font-weight:800;letter-spacing:.045em;text-transform:uppercase}
-    .installer-lenders-heading>strong{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:24px;padding:0 7px;border-radius:6px;background:#111418;color:#fff;font-size:11px;line-height:1}
-    .lender-chip-list{display:flex;flex-wrap:wrap;gap:8px;min-width:0}
-    .lender-chip{display:inline-flex;align-items:center;max-width:100%;min-height:32px;padding:6px 10px;border:1px solid #d9dfe4;border-radius:8px;background:#fff;color:#252b30;font-size:12.5px;font-weight:700;line-height:1.2;overflow-wrap:anywhere}
-    .lender-chip:hover{border-color:#aeb7bf;background:#fafbfc}
-    .installer-lenders-empty p{margin:0;color:#7a838a;font-size:13px}
-    .installer-empty{padding:30px;text-align:center;color:#69727a;border:1px dashed #d6dce0;border-radius:10px;background:#fff}
 
     @media(max-width:900px){
       .installers-hero{grid-template-columns:1fr;align-items:start;padding:28px}
@@ -298,27 +482,16 @@ const installerStates = US_STATES
       .installers-page{padding-left:14px;padding-right:14px}
       .installers-hero{padding:22px 19px;border-radius:12px;gap:20px}
       .installers-hero p{font-size:14px}
-      .installers-summary{display:grid;grid-template-columns:1fr 1fr;width:100%;gap:8px}
-      .installers-summary>div{min-width:0;padding:13px 14px}
+      .installers-summary{display:grid;grid-template-columns:repeat(3,1fr);width:100%;gap:8px}
+      .installers-summary>div{min-width:0;padding:12px 10px;text-align:center}
+      .installers-summary strong{font-size:18px}
+      .installers-summary span{font-size:11px}
       .installer-filter-grid{padding:16px;gap:14px}
       .installer-filter-grid select{min-height:46px;font-size:14px}
-      .installer-status{align-items:flex-start;flex-wrap:wrap;padding:13px 16px;font-size:13.5px}
-      .installer-results{padding:14px;gap:12px}
-      .installer-card{padding:17px;border-radius:11px}
-      .installer-card-top{grid-template-columns:auto minmax(0,1fr);align-items:start;gap:12px}
-      .installer-mark{width:40px;height:40px;border-radius:9px}
-      .installer-card h2{font-size:17px}
-      .installer-availability{grid-column:2;justify-self:start;margin-top:3px}
-      .installer-lenders{margin-top:15px;padding-top:14px}
-      .lender-chip-list{gap:6px}
-      .lender-chip{min-height:30px;padding:6px 9px;font-size:12px}
     }
 
     @media(max-width:390px){
       .installers-summary{grid-template-columns:1fr}
-      .installer-card-top{grid-template-columns:1fr}
-      .installer-mark{margin-bottom:2px}
-      .installer-availability{grid-column:1;justify-self:start}
     }
   </style>
 </BaseLayout>

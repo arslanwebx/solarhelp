@@ -9,10 +9,69 @@
   width: 100%;
 }
 
+/* Status container with reset button */
+.installers-page .installer-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  min-height: 54px;
+  padding: 14px 24px;
+  border-bottom: 1px solid #e5e9ec;
+  background: #fff;
+  color: #555e66;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.installers-page .status-left {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+.installers-page .installer-status strong {
+  color: #171b1f;
+  font-size: 14.5px;
+}
+
+.installers-page .status-dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #76552f;
+  box-shadow: 0 0 0 4px rgba(118, 85, 47, 0.1);
+}
+
+.installers-page .status-reset-link {
+  border: 0;
+  background: transparent;
+  color: #76552f;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: background .14s ease, color .14s ease;
+}
+
+.installers-page .status-reset-link:hover {
+  background: #f6f0eb;
+  color: #4a341b;
+}
+
 /* A denser directory layout makes 3–4 installer markets easier to scan. */
 .installers-page .installer-results.installer-results {
+  display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: stretch;
+  gap: 16px;
+  padding: 24px;
   background: #f7f8f9;
 }
 
@@ -21,9 +80,12 @@
   width: 100%;
   min-width: 0;
   height: 100%;
-  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 24px;
   border: 1px solid #dde3e7;
-  border-radius: 13px;
+  border-radius: 14px;
   background: #fff;
   box-shadow: 0 4px 14px rgba(17, 20, 24, 0.035);
   overflow: hidden;
@@ -86,12 +148,12 @@
   align-items: center;
   justify-content: center;
   min-height: 29px;
-  padding: 6px 9px;
+  padding: 6px 10px;
   border: 1px solid #cfe0d4;
   border-radius: 7px;
   background: #f7faf8;
   color: #31563f;
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 800;
   letter-spacing: .06em;
   white-space: nowrap;
@@ -103,15 +165,124 @@
   color: #795932;
 }
 
+/* Redline rate box inside card */
+.installers-page .installer-rate-section {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border: 1px solid #e1e7eb;
+  border-radius: 10px;
+  background: #f8fafb;
+}
+
+.installers-page .installer-rate-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.installers-page .installer-rate-details {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.installers-page .installer-rate-label {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .065em;
+  color: #6c757d;
+}
+
+.installers-page .installer-rate-value {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 21px;
+  font-weight: 800;
+  color: #111418;
+  letter-spacing: -.025em;
+  font-variant-numeric: tabular-nums;
+}
+
+.installers-page .installer-rate-value.is-lowest {
+  color: #1a6438;
+}
+
+.installers-page .installer-rate-value.is-na {
+  color: #6e7880;
+  font-size: 16px;
+}
+
+.installers-page .rate-badge-lowest {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: #eaf5ee;
+  border: 1px solid #c2e2cd;
+  color: #186236;
+  font-size: 11.5px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.installers-page .installer-coverage-meta {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #e1e6ea;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12.5px;
+  color: #636c74;
+}
+
+.installers-page .coverage-confirmed-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 650;
+}
+
+.installers-page .coverage-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #2f6948;
+}
+
+.installers-page .rate-unit-note {
+  font-size: 11.5px;
+  color: #7a838b;
+}
+
+.installers-page .rate-sheet-pending {
+  font-size: 11.5px;
+  color: #8b5b29;
+  font-weight: 650;
+}
+
 .installers-page .installer-note {
-  margin-top: 16px;
-  padding: 12px 13px;
-  border: 1px solid #e3e7ea;
+  margin-top: 14px;
+  padding: 11px 13px;
+  border: 1px solid #e5eaee;
+  border-left: 3px solid #76552f;
   border-radius: 8px;
-  background: #f8f9fa;
-  color: #525c64;
+  background: #fffdfa;
+  color: #555e66;
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 1.45;
+}
+
+.installers-page .installer-note.is-hold-note {
+  border-left-color: #9d4822;
+  background: #fdfaf8;
+  color: #8a3a16;
 }
 
 .installers-page .installer-lenders {
@@ -182,24 +353,162 @@
 
 .installers-page .installer-empty {
   grid-column: 1 / -1;
-  padding: 34px 20px;
+  padding: 38px 24px;
   text-align: center;
   color: #69727a;
   border: 1px dashed #d2d9de;
-  border-radius: 11px;
+  border-radius: 12px;
   background: #fff;
+}
+
+.installers-page .installer-empty strong {
+  display: block;
+  font-size: 16px;
+  color: #171a1d;
+  margin-bottom: 6px;
+}
+
+.installers-page .installer-empty p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* Default Overview Grid of All 9 Installers */
+.installers-page .installer-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  padding: 24px;
+  background: #f7f8f9;
+}
+
+.installers-page .installer-overview-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 22px;
+  border: 1px solid #dde3e7;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(17, 20, 24, 0.035);
+  transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+  cursor: pointer;
+}
+
+.installers-page .installer-overview-card:hover {
+  transform: translateY(-2px);
+  border-color: #76552f;
+  box-shadow: 0 10px 24px rgba(17, 20, 24, 0.075);
+}
+
+.installers-page .overview-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.installers-page .overview-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 760;
+  color: #14181b;
+  letter-spacing: -.02em;
+}
+
+.installers-page .overview-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #111418;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.installers-page .overview-rate-box {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f6f8fa;
+  border: 1px solid #e6ebef;
+  margin-bottom: 12px;
+}
+
+.installers-page .overview-rate-label {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: #707982;
+}
+
+.installers-page .overview-rate-value {
+  display: block;
+  font-size: 15px;
+  font-weight: 800;
+  color: #161a1d;
+  margin-top: 2px;
+}
+
+.installers-page .overview-states-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 14px;
+}
+
+.installers-page .state-chip-mini {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: #edf1f4;
+  color: #3b4249;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.installers-page .overview-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #d5dcde;
+  background: #fff;
+  color: #171b1f;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .14s ease, border-color .14s ease, color .14s ease;
+}
+
+.installers-page .overview-action-btn:hover {
+  background: #111418;
+  color: #fff;
+  border-color: #111418;
 }
 
 @media (max-width: 900px) {
   .installers-page .installer-results.installer-results {
     grid-template-columns: 1fr;
   }
+  .installers-page .installer-overview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 620px) {
   .installers-page .installer-card {
-    padding: 17px;
-    border-radius: 11px;
+    padding: 18px;
+    border-radius: 12px;
   }
 
   .installers-page .installer-card-top {
@@ -237,6 +546,12 @@
     min-height: 30px;
     padding: 6px 9px;
     font-size: 12px;
+  }
+
+  .installers-page .installer-overview-grid {
+    grid-template-columns: 1fr;
+    padding: 14px;
+    gap: 12px;
   }
 }
 
