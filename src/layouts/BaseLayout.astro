@@ -127,13 +127,20 @@ const resolvedTitle = path === '/' ? 'Solar Help - Calculator & Resources' : tit
           });
 
           observer.observe(document.body, { childList: true, subtree: true });
-          window.addEventListener('resize', () => clampTree(document.body), { passive: true });
+        };
+
+        const scheduleTypographyGuard = () => {
+          if ('requestIdleCallback' in window) {
+            window.requestIdleCallback(runTypographyGuard, { timeout: 250 });
+          } else {
+            window.setTimeout(runTypographyGuard, 0);
+          }
         };
 
         if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', runTypographyGuard, { once: true });
+          document.addEventListener('DOMContentLoaded', scheduleTypographyGuard, { once: true });
         } else {
-          runTypographyGuard();
+          scheduleTypographyGuard();
         }
       })();
     </script>
