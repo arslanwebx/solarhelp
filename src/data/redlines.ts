@@ -7,7 +7,7 @@ export const REDLINE_COVERAGE = [
   {
     name: 'UNIVERSAL SOLAR',
     states: ['AZ','IL','NM','OH','IN'],
-    rates: { AZ:2.20, IL:2.20, NM:2.20, OH:2.20, IN:2.20 },
+    rates: { AZ:2.30, IL:2.30, NM:2.30, OH:2.30, IN:2.30 },
     notes: { IL:'ON HOLD' }
   },
   {
